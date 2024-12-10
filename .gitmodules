@@ -1,0 +1,3 @@
+[submodule "contracts/xdao"]
+	path = contracts/xdao
+	url = https://github.com/curvefi/curve-xdao.git
