@@ -44,7 +44,7 @@ Here's the flowchart of the system for an OP Stack-based chain:
 flowchart TD
     A[Prover] --> |Generates from L1 state| E[State Proof]
     E[State Proof] --> B[Verifier Contract]
-    B -->|Verifies proof and data| C[Price Oracle Contract]
+    B -->|Push update price if proof is correct| C[Price Oracle Contract]
     C -->|Provides scrvUSD price| D[stableswap-ng Pool]
 
     subgraph L2 Chain
