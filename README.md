@@ -8,7 +8,7 @@ When bridging scrvUSD crosschain, the token loses its ERC4626 capabilities and b
 a plain ERC20 token that can not be minted with nor redeemed using crvUSD.
 
 To ease this problem we opted to have secondary scrvUSD markets on all chains where scrvUSD can be redeemed. 
-Since the price of the asset is not stable, we cannot use a "simple" [stableswap-ng](https://github.com/curvefi/stableswap-ng/blob/fd54b9a1a110d0e2e4f962583761d9e236b70967/contracts/main/CurveStableSwapNG.vy#L17) TODO pool as the price
+Since the price of the asset is not stable, we cannot use a "simple" [stableswap-ng](https://github.com/curvefi/stableswap-ng/blob/fd54b9a1a110d0e2e4f962583761d9e236b70967/contracts/main/CurveStableSwapNG.vy#L17) pool as the price
 of the asset would go up as the yield accrues. Fortunately stableswap-ng supports "oraclized" assets,
 which means that we can use an oracle to provide the rate at which the price of the asset is increasing
 and the pool will work as expected.
