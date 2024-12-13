@@ -1,0 +1,18 @@
+[project]
+name = "storage-proofs"
+version = "0.1.0"
+description = "L2 Oracles powered by storage proofs"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "vyper>=0.4.0",
+    "snekmate==0.1.0",
+    "web3>=7.0.0",
+    # placeholders for git dependencies
+    "boa-solidity",
+    "titanoboa",
+]
+
+[tool.uv.sources]
+titanoboa = { git = "https://github.com/vyperlang/titanoboa.git", rev = "a52c79c67ba0e00ceafc70f9daf730c9a57f27c9" }
+boa-solidity = { git = "https://github.com/z80dev/boa-solidity", rev = "c52d9ec9d665210784ca41b7e73af495a4b799fa" }

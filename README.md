@@ -62,11 +62,15 @@ The prover needs to be online to provide the proof in a timely manner, if the pr
 ## Contributing
 
 ### Install
-Install dependencies:
-```shell
-pip install git+https://github.com/z80dev/boa-solidity.git
-pip install -r requirements.in
+Install python dependencies:
 
+```shell
+uv sync
+```
+
+Solidity dependencies:
+    
+```shell
 solc-select install 0.8.18
 solc-select use 0.8.18
 
