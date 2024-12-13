@@ -31,7 +31,7 @@ like USDC/scrvUSD, FRAX/scrvUSD, etc.
 
 The system relies on the following actors:
 - An offchain prover (from now on the prover), whose role is to fetch data from Ethereum that are useful to compute the growth rate of the vault, alongside with a proof that those data are valid.
-- A smart contract that will be called by the prover (from now on the verifier) that will verify that the data provided alongside their proof are valid.
+- A smart contract that will be called by the prover (from now on the verifier) that will verify that the data provided alongside their proof.
 - A smart contract that will provide the current price of scrvUSD, given the growth rate of the vault provided by the prover and verified by the verifier, to be used by the stableswap-ng pool on the target chain.
 
 Depending on the type of chain the proof (and hence its verification process) will be different:
