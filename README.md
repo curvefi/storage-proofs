@@ -68,6 +68,12 @@ Install python dependencies:
 uv sync
 ```
 
+To enter the python environment:
+
+```shell
+source .venv/bin/activate
+```
+
 Solidity dependencies:
     
 ```shell
