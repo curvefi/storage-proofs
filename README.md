@@ -80,15 +80,13 @@ Solidity dependencies:
 solc-select install 0.8.18
 solc-select use 0.8.18
 
-npm install solidity-rlp@2.0.7
+npm install solidity-rlp@2.0.8
 ```
 
-Install only `contracts/` folder from xdao:
+Completely sync xdao and remove all but contracts/ folder:
 ```shell
-echo "contracts/" >> .git/modules/contracts/xdao/info/sparse-checkout
-rm -rf contracts/xdao
-git submodule update
-git submodule sync
+git submodule update --init --recursive --depth 1
+find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} +
 ```
 
 ### Run
