@@ -13,7 +13,9 @@ from hexbytes import HexBytes
 from proof import generate_proof, submit_proof, PROVER
 
 
-NETWORK = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['WEB3_OPTIMISM_MAINNET_ALCHEMY_API_KEY']}"
+NETWORK = (
+    f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['WEB3_OPTIMISM_MAINNET_ALCHEMY_API_KEY']}"
+)
 
 SCRVUSD = "0x0655977FEb2f289A4aB78af67BAB0d17aAb84367"
 
@@ -32,10 +34,13 @@ l2_web3 = Web3(
 
 def deploy():
     boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").deploy()
-    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy").deploy(10 ** 18, 10 ** 13)
+    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy").deploy(
+        10**18, 10**13
+    )
 
     prover = boa_solidity.load_partial_solc(
-        "contracts/scrvusd/provers/ScrvusdProver.sol", compiler_args={
+        "contracts/scrvusd/provers/ScrvusdVerifier.sol",
+        compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
             "optimize_runs": 200,
@@ -76,8 +81,8 @@ def account_load(fname):
         return account.Account.from_key(pkey)
 
 
-if __name__ == '__main__':
-    boa.fork(NETWORK, block_identifier='latest')
+if __name__ == "__main__":
+    boa.fork(NETWORK, block_identifier="latest")
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
