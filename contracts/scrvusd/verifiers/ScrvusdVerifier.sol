@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./ScrvusdVerifierBase.sol";
+import "./ScrvusdVerifierShared.sol";
 import {RLPReader} from "hamdiallam/Solidity-RLP@2.0.8/contracts/RLPReader.sol";
 import {StateProofVerifier as Verifier} from "../../xdao/contracts/libs/StateProofVerifier.sol";
 
@@ -9,18 +9,18 @@ interface IBlockHashOracle {
     function get_block_hash(uint256 _number) external view returns (bytes32);
 }
 
-contract ScrvusdVerifier is ScrvusdVerifierBase {
+contract ScrvusdVerifier is ScrvusdVerifierShared {
     address public immutable BLOCK_HASH_ORACLE;
 
     constructor(address _block_hash_oracle, address _scrvusd_oracle)
-        ScrvusdVerifierBase(_scrvusd_oracle)
+        ScrvusdVerifierShared(_scrvusd_oracle)
     {
         BLOCK_HASH_ORACLE = _block_hash_oracle;
     }
 
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the parameters
-    function prove(
+    function verify(
         bytes memory _block_header_rlp,
         bytes memory _proof_rlp
     ) external returns (uint256) {
