@@ -14,9 +14,8 @@ interface IScrvusdOracle {
     ) external returns (uint256);
 }
 
-// @dev Base here refers to the fact that this is a base
-// contract that is inherited by other contracts and not
-// a contract related to the Base L2.
+// @dev This contract provides shared logic implementations 
+// to be inherited by chain-specific contracts.
 abstract contract ScrvusdVerifierShared {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
