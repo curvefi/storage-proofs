@@ -20,9 +20,9 @@ def verifier_contract():
 
 
 @pytest.fixture()
-def oracle_v1(dev_deployer, verifier_contract):
-    oracle_deployer = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy")
+def oracle(dev_deployer, verifier_contract):
+    oracle_deployer = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV2.vy")
     with boa.env.prank(dev_deployer):
         oracle = oracle_deployer(10**18, 10**10)
-        oracle.set_prover(verifier_contract)
+        oracle.set_verifier(verifier_contract)
     return oracle
