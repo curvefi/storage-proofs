@@ -89,6 +89,11 @@ git submodule update --init --recursive --depth 1
 find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} +
 ```
 
+### Test
+```shell
+pytest -s
+```
+
 ### Run
 ```shell
 python scripts/scrvusd/deploy.py
