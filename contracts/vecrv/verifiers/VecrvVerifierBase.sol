@@ -83,7 +83,7 @@ abstract contract VecrvVerifierBase {
         ).value;
         IVecrvOracle.Point memory point_history = _extract_point(
             POINT_HISTORY_PROOF_I,
-            keccak256(abi.encode(uint256(keccak256(abi.encode(POINT_HISTORY_SLOT))) + epoch)),
+            uint256(keccak256(abi.encode(uint256(keccak256(abi.encode(POINT_HISTORY_SLOT))) + epoch))),
             storageRoot,
             proofs
         );
@@ -122,13 +122,13 @@ abstract contract VecrvVerifierBase {
         ).value;
         IVecrvOracle.Point memory user_point_history = _extract_point(
             USER_POINT_HISTORY_PROOF_I,
-            keccak256(abi.encode(uint256(keccak256(abi.encode(keccak256(abi.encode(USER_POINT_HISTORY_SLOT, user))))) + user_point_epoch)),
+            uint256(keccak256(abi.encode(uint256(keccak256(abi.encode(keccak256(abi.encode(USER_POINT_HISTORY_SLOT, user))))) + user_point_epoch))),
             storageRoot,
             proofs
         );
         IVecrvOracle.LockedBalance memory locked = _extract_locked_balance(
             LOCKED_BALANCE_PROOF_I,
-            keccak256(abi.encode(keccak256(abi.encode(LOCKED_BALANCE_SLOT, user)))),
+            uint256(keccak256(abi.encode(keccak256(abi.encode(LOCKED_BALANCE_SLOT, user))))),
             storageRoot,
             proofs
         );
@@ -141,16 +141,16 @@ abstract contract VecrvVerifierBase {
         );
     }
 
-    function _extract_point(uint256 proof_i, bytes32 slot, bytes32 storageRoot, RLPReader.RLPItem[] memory proofs) internal returns (IVecrvOracle.Point memory p) {
+    function _extract_point(uint256 proof_i, uint256 slot, bytes32 storageRoot, RLPReader.RLPItem[] memory proofs) internal returns (IVecrvOracle.Point memory p) {
         p.bias = int128(int256(Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot)), storageRoot, proofs[proof_i].toList()).value));
-        p.slope = int128(int256(Verifier.extractSlotValueFromProof(keccak256(abi.encode(uint256(slot) + 1)), storageRoot, proofs[proof_i + 1].toList()).value));
-        p.ts = Verifier.extractSlotValueFromProof(keccak256(abi.encode(uint256(slot) + 2)), storageRoot, proofs[proof_i + 2].toList()).value;
-        p.blk = Verifier.extractSlotValueFromProof(keccak256(abi.encode(uint256(slot) + 3)), storageRoot, proofs[proof_i + 3].toList()).value;
+        p.slope = int128(int256(Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot + 1)), storageRoot, proofs[proof_i + 1].toList()).value));
+        p.ts = Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot + 2)), storageRoot, proofs[proof_i + 2].toList()).value;
+        p.blk = Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot + 3)), storageRoot, proofs[proof_i + 3].toList()).value;
     }
 
-    function _extract_locked_balance(uint256 proof_i, bytes32 slot, bytes32 storageRoot, RLPReader.RLPItem[] memory proofs) internal returns (IVecrvOracle.LockedBalance memory lb) {
+    function _extract_locked_balance(uint256 proof_i, uint256 slot, bytes32 storageRoot, RLPReader.RLPItem[] memory proofs) internal returns (IVecrvOracle.LockedBalance memory lb) {
         lb.amount = int128(int256(Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot)), storageRoot, proofs[proof_i].toList()).value));
-        lb.end = Verifier.extractSlotValueFromProof(keccak256(abi.encode(uint256(slot) + 1)), storageRoot, proofs[proof_i + 1].toList()).value;
+        lb.end = Verifier.extractSlotValueFromProof(keccak256(abi.encode(slot + 1)), storageRoot, proofs[proof_i + 1].toList()).value;
     }
 
     function _extractAccountStorageRoot(
