@@ -80,7 +80,7 @@ Solidity dependencies:
 solc-select install 0.8.18
 solc-select use 0.8.18
 
-npm install solidity-rlp@2.0.8
+npm install solidity-rlp@2.0.7
 ```
 
 Completely sync xdao and remove all but contracts/ folder:

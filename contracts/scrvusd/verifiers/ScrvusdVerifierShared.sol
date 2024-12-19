@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import {RLPReader} from "hamdiallam/Solidity-RLP@2.0.8/contracts/RLPReader.sol";
+import {RLPReader} from "hamdiallam/Solidity-RLP@2.0.7/contracts/RLPReader.sol";
 import {StateProofVerifier as Verifier} from "../../xdao/contracts/libs/StateProofVerifier.sol";
 
 uint256 constant PARAM_CNT = 2 + 5;

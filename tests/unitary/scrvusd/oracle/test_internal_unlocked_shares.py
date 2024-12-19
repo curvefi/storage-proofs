@@ -2,7 +2,7 @@ import boa
 import time
 
 
-def test_partial_unlock(oracle):
+def test_partial_unlock(scrvusd_rate_oracle):
     """
     Test the `_unlocked_shares` function when shares are partially unlocked.
     """
@@ -18,14 +18,14 @@ def test_partial_unlock(oracle):
     expected_unlocked_shares = profit_unlocking_rate * (ts - last_profit_update) // max_bps_extended
 
     # Call the function
-    result = oracle.eval(
+    result = scrvusd_rate_oracle.eval(
         f"self._unlocked_shares({full_profit_unlock_date}, {profit_unlocking_rate}, {last_profit_update}, {balance_of_self}, {ts})"
     )
     # Assertions
     assert result == expected_unlocked_shares, f"Expected {expected_unlocked_shares}, got {result}"
 
 
-def test_fully_unlocked(oracle):
+def test_fully_unlocked(scrvusd_rate_oracle):
     """
     Test the `_unlocked_shares` function when all shares are fully unlocked.
     """
@@ -40,7 +40,7 @@ def test_fully_unlocked(oracle):
     expected_unlocked_shares = balance_of_self
 
     # Call the function
-    result = oracle.eval(
+    result = scrvusd_rate_oracle.eval(
         f"self._unlocked_shares({full_profit_unlock_date}, {profit_unlocking_rate}, {last_profit_update}, {balance_of_self}, {ts})"
     )
 

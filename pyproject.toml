@@ -11,6 +11,8 @@ dependencies = [
     "vyper>=0.4.0",
     "snekmate==0.1.0",
     "web3>=7.0.0",
+    "mamushi==0.0.4a3",
+    "pytest-xdist>=3.6.1",
     # placeholders for git dependencies
     "boa-solidity",
     "titanoboa",
