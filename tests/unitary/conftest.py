@@ -10,6 +10,11 @@ DEFAULT_BLOCK_HASH = bytes.fromhex(
 
 
 @pytest.fixture()
+def block_number():
+    return DEFAULT_BLOCK_NUMBER
+
+
+@pytest.fixture()
 def curve_dao():
     return CURVE_DAO
 
@@ -44,7 +49,7 @@ def scrvusd_rate_oracle(dev_deployer, verifier_mock):
 @pytest.fixture()
 def scrvusd_rate_verifier(blockhash_oracle_mock, scrvusd_rate_oracle, dev_deployer):
     contract_deployer = boa.load_partial_solc(
-        "contracts/scrvusd/verifiers/ScrvusdVerifier.sol",
+        "contracts/scrvusd/verifiers/ScrvusdVerifierOP.sol",
         compiler_args={
             "optimize": True,
             "optimize_runs": 200,
