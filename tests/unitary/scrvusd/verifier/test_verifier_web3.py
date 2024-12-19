@@ -28,7 +28,7 @@ def test_verifier(
     print(previous_rate)
     assert previous_rate == 1000000000000000000  # we init at 1, might change later
     print(scrvusd_rate_verifier.verify(bytes.fromhex(block_header_rlp), bytes.fromhex(proof_rlp)))
-    updated_rate = scrvusd_rate_oracle.raw_price()
+    updated_rate = scrvusd_rate_oracle.raw_price(0, w3_eth.eth.get_block(block_number).timestamp)
     print(updated_rate)
     assert updated_rate > previous_rate  # must be higher
     assert updated_rate == 1019823606670401906  # new price at fixture block
