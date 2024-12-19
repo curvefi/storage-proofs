@@ -52,12 +52,12 @@ def delegated(_chain_id: uint256, _from: address) -> address:
 
 @external
 @view
-def delegater(_chain_id: uint256, _to: address) -> address:
+def delegator(_chain_id: uint256, _to: address) -> address:
     """
     @notice Get contract delegating balance to `_to`
     @param _chain_id Chain ID to check for
     @param _to Address of delegated to
-    @return Address of delegater
+    @return Address of delegator
     """
     addr: address = self.delegation_to[_chain_id][_to]
     if addr == self:
