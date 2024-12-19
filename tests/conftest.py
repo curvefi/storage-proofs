@@ -4,7 +4,10 @@ import os
 from web3 import Web3
 
 CHAINS_DICT = {
-    "mainnet": {"id": 1, "rpc": os.getenv("ETH_RPC_URL") or "https://eth.drpc.org"},
+    "mainnet": {
+        "id": 1,
+        "rpc": f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID']}",
+    },
     "optimism": {
         "id": 10,
         "rpc": "https://mainnet.optimism.io",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./ScrvusdVerifier.sol";
+import "./ScrvusdVerifierCore.sol";
 import {RLPReader} from "hamdiallam/Solidity-RLP@2.0.7/contracts/RLPReader.sol";
 import {StateProofVerifier as Verifier} from "../../xdao/contracts/libs/StateProofVerifier.sol";
 
@@ -12,11 +12,11 @@ interface ISignalService {
         returns (uint64 blockId_, bytes32 chainData_);
 }
 
-contract ScrvusdVerifierTaiko is ScrvusdVerifier {
+contract ScrvusdVerifierTaiko is ScrvusdVerifierCore {
     address public constant SIGNAL_SERVICE = 0x1670000000000000000000000000000000000005;
     bytes32 internal constant H_STATE_ROOT = keccak256("STATE_ROOT");
 
-    constructor(address _scrvusd_oracle) ScrvusdVerifier(_scrvusd_oracle) {}
+    constructor(address _scrvusd_oracle) ScrvusdVerifierCore(_scrvusd_oracle) {}
 
     /// @param _block_number The block number of known block
     /// @param _proof_rlp The state proof of the parameters.

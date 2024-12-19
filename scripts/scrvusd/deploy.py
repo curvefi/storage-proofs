@@ -39,7 +39,7 @@ def deploy():
     )
 
     prover = boa_solidity.load_partial_solc(
-        "contracts/scrvusd/provers/ScrvusdVerifier.sol",
+        "contracts/scrvusd/verifiers/ScrvusdVerifier.sol",
         compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,

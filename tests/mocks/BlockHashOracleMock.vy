@@ -18,5 +18,5 @@ def get_block_hash(_number: uint256) -> bytes32:
 
 
 @external
-def hardcode_block(_block_n: uint256, _block_hash: bytes32):
+def set_block_hash(_block_n: uint256, _block_hash: bytes32):
     self.block_hash[_block_n] = _block_hash
