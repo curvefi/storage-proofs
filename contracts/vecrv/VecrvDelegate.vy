@@ -26,8 +26,12 @@ event Delegate:
     _to: address
 
 
+# maps chain and source to delegation target
 # [chain id][address from][address to]
 delegation_from: HashMap[uint256, HashMap[address, address]]
+
+# maps chain and target to delegation source
+# [chain id][address to][address from]
 delegation_to: HashMap[uint256, HashMap[address, address]]
 
 version: public(constant(String[8])) = "0.0.1"
@@ -40,7 +44,7 @@ def __init__():
 
 @external
 @view
-def delegated(_chain_id: uint256, _from: address) -> address:
+def delegation_target(_chain_id: uint256, _from: address) -> address:
     """
     @notice Get contract balance being delegated to
     @param _chain_id Chain ID to check for
@@ -52,7 +56,7 @@ def delegated(_chain_id: uint256, _from: address) -> address:
 
 @external
 @view
-def delegator(_chain_id: uint256, _to: address) -> address:
+def delegation_source(_chain_id: uint256, _to: address) -> address:
     """
     @notice Get contract delegating balance to `_to`
     @param _chain_id Chain ID to check for
