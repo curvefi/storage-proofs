@@ -30,8 +30,6 @@ interface IVecrvOracle {
         Point memory _point_history,
         int128[] memory _slope_changes
     ) external;
-
-    function printi(uint256 input) external;
 }
 
 // @dev Base here refers to the fact that this is a base
