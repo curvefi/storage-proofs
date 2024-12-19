@@ -24,3 +24,6 @@ venv/
 # IDEs
 .vscode/
 .idea/
+
+# Solidity packages
+node_modules/
