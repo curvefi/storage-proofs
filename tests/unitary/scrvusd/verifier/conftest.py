@@ -1,9 +1,0 @@
-import boa
-import boa_solidity
-import pytest
-
-CURVE_DAO = boa.env.generate_address()
-DEFAULT_BLOCK_NUMBER = 21369420
-DEFAULT_BLOCK_HASH = bytes.fromhex(
-    "37CFBA409B3C9763A464565798C166B007C29F613ED9900C2EFA6342A3A5A65C"
-)

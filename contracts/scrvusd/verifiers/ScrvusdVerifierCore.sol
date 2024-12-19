@@ -16,7 +16,7 @@ interface IScrvusdOracle {
 
 // @dev This contract provides shared logic implementations 
 // to be inherited by chain-specific contracts.
-abstract contract ScrvusdVerifier {
+abstract contract ScrvusdVerifierCore {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 

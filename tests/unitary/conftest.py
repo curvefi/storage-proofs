@@ -49,7 +49,7 @@ def scrvusd_rate_oracle(dev_deployer, verifier_mock):
 @pytest.fixture()
 def scrvusd_rate_verifier(blockhash_oracle_mock, scrvusd_rate_oracle, dev_deployer):
     contract_deployer = boa.load_partial_solc(
-        "contracts/scrvusd/verifiers/ScrvusdVerifierOP.sol",
+        "contracts/scrvusd/verifiers/ScrvusdVerifierBasic.sol",
         compiler_args={
             "optimize": True,
             "optimize_runs": 200,
