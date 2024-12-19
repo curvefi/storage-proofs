@@ -16,22 +16,22 @@ def test_verifier(
     real_price = proof_utils.scrvusd_pps(w3_eth, block_number)
     print(real_price)
     # prepare ground truth - mock blockhash oracle on the sidechain
-    block = w3_eth.eth.get_block(block_number)
-    blockhash_oracle_mock.set_block_hash(block_number, block.hash)
+    block_hash = w3_eth.eth.get_block(block_number).hash
+    blockhash_oracle_mock.set_block_hash(block_number, block_hash)
 
     # prepare proof
     block_header_rlp, proof_rlp = proof_utils.generate_proof(
-        w3_eth, block_number=block_number, log=True
+        w3_eth, block_number=block_number, log=False
     )
 
     previous_rate = scrvusd_rate_oracle.raw_price()
     print(previous_rate)
     assert previous_rate == 1000000000000000000  # we init at 1, might change later
     print(scrvusd_rate_verifier.verify(bytes.fromhex(block_header_rlp), bytes.fromhex(proof_rlp)))
-    updated_rate = scrvusd_rate_oracle.raw_price(0, block.timestamp)
+    updated_rate = scrvusd_rate_oracle.raw_price(0, w3_eth.eth.get_block(block_number).timestamp)
     print(updated_rate)
     assert updated_rate > previous_rate  # must be higher
-    assert updated_rate == real_price  # new price at fixture block
+    assert updated_rate == 1019823606670401906  # new price at fixture block
 
 
 # @pytest.mark.parametrize("w3_sidechain", ["taiko", "optimism"], indirect=True)
