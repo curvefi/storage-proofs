@@ -1,19 +1,17 @@
-import json
-import os
-from getpass import getpass
-
 import boa
 import boa_solidity
+
+from web3 import Web3
+import json
+import os
+
+from getpass import getpass
 from eth_account import account
 from hexbytes import HexBytes
-from proof import (
-    generate_balance_proof,
-    generate_delegation_proof,
-    generate_total_proof,
-)
-from web3 import Web3
 
-NETWORK = f"https://rpc.frax.com"
+from proof import generate_balance_proof, generate_total_proof, generate_delegation_proof
+
+NETWORK = f"https://mainnet.base.org"
 
 eth_web3 = Web3(
     provider=Web3.HTTPProvider(
@@ -29,14 +27,11 @@ l2_web3 = Web3(
 
 
 def deploy():
-    boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").at(
-        "0xbD2775B8eADaE81501898eB208715f0040E51882"
-    )
+    boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").at("0x3c0a405E914337139992625D5100Ea141a9C4d11")
     voracle = boa.load_partial("contracts/vecrv/oracles/VecrvOracle.vy").deploy()
 
     verifier = boa_solidity.load_partial_solc(
-        "contracts/vecrv/verifiers/VecrvVerifier.sol",
-        compiler_args={
+        "contracts/vecrv/verifiers/VecrvVerifier.sol", compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
             "optimize_runs": 200,
@@ -46,8 +41,7 @@ def deploy():
     ).deploy(boracle.address, voracle.address)
 
     d_verifier = boa_solidity.load_partial_solc(
-        "contracts/vecrv/verifiers/DelegationVerifier.sol",
-        compiler_args={
+        "contracts/vecrv/verifiers/DelegationVerifier.sol", compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
             "optimize_runs": 200,
@@ -72,7 +66,7 @@ def verify(user, boracle, verifier):
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_balance_proof(user, eth_web3, number, log=True)
-    verifier.verifyBalanceByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
+    verifier.verifyByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
     print(f"Sibmitted proof")
 
 
@@ -86,41 +80,33 @@ def verify_total(boracle, verifier):
 
 
 def simulate(user, boracle, voracle, verifier):
-    print(
-        f"Initial balance: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}"
-    )
+    print(f"Initial balance: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}")
     verify(user, boracle, verifier)
-    print(
-        f"Balance just after: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}"
-    )
+    print(f"Balance just after: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}")
     l = voracle.locked(user)
     print(f"Locked balance: {l[0] / 10 ** 18:.2f} until {l[1]}")
     already = 0
     for i in [1, 2, 5, 10, 60, 3600, 10 * 3600, 86400, 7 * 86400]:
         boa.env.time_travel(seconds=i - already)
         already = i
-        print(
-            f"Balance after {i: 8} sec: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}"
-        )
+        print(f"Balance after {i: 8} sec: {voracle.balanceOf(user) / 10 ** 18:.2f} / {voracle.totalSupply() / 10 ** 18:.2f}")
 
     print("Verifying total")
     verify(user, boracle, verifier)
 
 
 def account_load(fname):
-    path = os.path.expanduser(
-        os.path.join("~", ".brownie", "accounts", fname + ".json")
-    )
+    path = os.path.expanduser(os.path.join("~", ".brownie", "accounts", fname + ".json"))
     with open(path, "r") as f:
         pkey = account.decode_keyfile_json(json.load(f), getpass())
         return account.Account.from_key(pkey)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # deploy on ETH
     # delegate = boa.load_partial("contracts/vecrv/VecrvDelegate.vy").deploy()
 
-    boa.fork(NETWORK, block_identifier="latest")
+    boa.fork(NETWORK, block_identifier='latest')
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
