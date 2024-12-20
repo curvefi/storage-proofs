@@ -66,7 +66,7 @@ def verify(user, boracle, verifier):
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_balance_proof(user, eth_web3, number, log=True)
-    verifier.verify(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
+    verifier.verifyByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
     print(f"Sibmitted proof")
 
 
@@ -75,7 +75,7 @@ def verify_total(boracle, verifier):
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_total_proof(eth_web3, number, log=True)
-    verifier.verifyTotal(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
+    verifier.verifyTotalByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
     print(f"Sibmitted proof")
 
 

@@ -16,7 +16,7 @@ interface IVecrvOracle {
 // @dev Base here refers to the fact that this is a base
 // contract that is inherited by other contracts and not
 // a contract related to the Base L2.
-abstract contract DelegationVerifierBase {
+abstract contract DelegationVerifierCore {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
