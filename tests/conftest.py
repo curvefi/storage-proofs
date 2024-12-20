@@ -87,7 +87,7 @@ def blockhash_oracle_mock(dev_deployer):
 def scrvusd_rate_oracle(dev_deployer, verifier_mock):
     contract_deployer = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV2.vy")
     with boa.env.prank(dev_deployer):
-        contract = contract_deployer(10**18, 10**10)
+        contract = contract_deployer(10**18)
         contract.set_verifier(verifier_mock)
     return contract
 
