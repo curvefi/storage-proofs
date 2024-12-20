@@ -47,7 +47,10 @@ def delegated(_chain_id: uint256, _from: address) -> address:
     @param _from Address of delegator
     @return Destination address of delegation
     """
-    return self.delegation_from[_chain_id][_from]
+    addr: address = self.delegation_from[_chain_id][_from]
+    if addr == empty(address):
+        addr = _from
+    return addr
 
 
 @external
@@ -60,8 +63,8 @@ def delegator(_chain_id: uint256, _to: address) -> address:
     @return Address of delegator
     """
     addr: address = self.delegation_to[_chain_id][_to]
-    if addr == self:
-        return empty(address)
+    if addr in [empty(address), self]:
+        return _to
     return addr
 
 
