@@ -25,7 +25,7 @@ contract VecrvVerifier is VecrvVerifierCore {
     /// @param _user User to verify balance for
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the parameters
-    function verifyByBlockHash(
+    function verifyBalanceByBlockHash(
         address _user,
         bytes memory _block_header_rlp,
         bytes memory _proof_rlp
@@ -41,7 +41,7 @@ contract VecrvVerifier is VecrvVerifierCore {
     /// @param _user User to verify balance for
     /// @param _block_number Number of the block to use state root hash
     /// @param _proof_rlp The state proof of the parameters
-    function verifyByStateRoot(
+    function verifyBalanceByStateRoot(
         address _user,
         uint256 _block_number,
         bytes memory _proof_rlp

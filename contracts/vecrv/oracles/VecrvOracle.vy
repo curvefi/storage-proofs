@@ -58,8 +58,8 @@ locked: public(HashMap[address, LockedBalance])
 slope_changes: public(HashMap[uint256, int128])
 
 # [chain id][address from][address to]
-delegation_from: public(HashMap[address, address])
-delegation_to: public(HashMap[address, address])
+delegation_from: HashMap[address, address]
+delegation_to: HashMap[address, address]
 last_delegation: HashMap[address, uint256]
 
 name: public(constant(String[64])) = "Vote-escrowed CRV"
@@ -92,6 +92,34 @@ def _balanceOf(user: address, timestamp: uint256) -> uint256:
         return 0
 
     return convert(last_point.bias, uint256)
+
+
+@external
+@view
+def delegation_target(_from: address) -> address:
+    """
+    @notice Get contract balance being delegated to
+    @param _from Address of delegator
+    @return Destination address of delegation
+    """
+    addr: address = self.delegation_from[_from]
+    if addr == empty(address):
+        addr = _from
+    return addr
+
+
+@external
+@view
+def delegation_source(_to: address) -> address:
+    """
+    @notice Get contract delegating balance to `_to`
+    @param _to Address of delegated to
+    @return Address of delegator
+    """
+    addr: address = self.delegation_to[_to]
+    if addr == empty(address):
+        addr = _to
+    return addr
 
 
 @view

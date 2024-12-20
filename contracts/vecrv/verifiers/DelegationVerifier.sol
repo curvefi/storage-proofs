@@ -22,7 +22,7 @@ contract DelegationVerifier is DelegationVerifierCore {
     /// @param _from Address from which balance is delegated
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the parameters
-    function verifyByBlockHash(
+    function verifyDelegationByBlockHash(
         address _from,
         bytes memory _block_header_rlp,
         bytes memory _proof_rlp
@@ -40,7 +40,7 @@ contract DelegationVerifier is DelegationVerifierCore {
     /// @param _from Address from which balance is delegated
     /// @param _block_number Number of the block to use state root hash
     /// @param _proof_rlp The state proof of the parameters
-    function verifyByStateRoot(
+    function verifyDelegationByStateRoot(
         address _from,
         uint256 _block_number,
         bytes memory _proof_rlp
