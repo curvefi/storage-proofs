@@ -43,6 +43,16 @@ def get_block_hash(_number: uint256) -> bytes32:
     return block_hash
 
 
+@view
+@external
+def get_state_root(_number: uint256) -> bytes32:
+    """
+    @notice Query the state root hash of a block.
+    @dev Reverts for block numbers which have yet to be set.
+    """
+    raise "Not implemented"
+
+
 @internal
 def _update_block_hash() -> (uint256, bytes32):
     number: uint256 = convert(staticcall L1_BLOCK.number(), uint256)
