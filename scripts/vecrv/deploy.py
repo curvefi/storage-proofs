@@ -33,7 +33,6 @@ def deploy():
         "0xbD2775B8eADaE81501898eB208715f0040E51882"
     )
     voracle = boa.load_partial("contracts/vecrv/oracles/VecrvOracle.vy").deploy()
-    print("voracle abi", voracle.abi)
 
     verifier = boa_solidity.load_partial_solc(
         "contracts/vecrv/verifiers/VecrvVerifier.sol",
