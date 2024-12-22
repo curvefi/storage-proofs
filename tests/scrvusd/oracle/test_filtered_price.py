@@ -33,13 +33,25 @@ def test_default_behavior(scrvusd_rate_oracle, verifier_mock):
 
     # price at period beginning must be 1
     assert scrvusd_rate_oracle.raw_price(ts) == 10**18
+    # filtered price must be the same as raw price
+    assert scrvusd_rate_oracle.raw_price(ts) == scrvusd_rate_oracle.filtered_price(ts)
 
     # as time passes, we must now have different price
     assert scrvusd_rate_oracle.raw_price(full_profit_unlock_date) == int(
         10**36 * 10_000 // (10_000 * 10**18 - shares_to_distribute)
     )
 
-    # # test different mode (inverted price)
-    assert scrvusd_rate_oracle.raw_price(full_profit_unlock_date, 1) == int(
-        10**18 * (10_000 * 10**18 - shares_to_distribute) // (10_000 * 10**18)
+    # filtered price must be the same as raw price
+    assert scrvusd_rate_oracle.raw_price(
+        full_profit_unlock_date
+    ) == scrvusd_rate_oracle.filtered_price(full_profit_unlock_date)
+
+    # now we exceed distribution time, and filtered price must keep growing
+    t_new = full_profit_unlock_date + 1
+    assert scrvusd_rate_oracle.filtered_price(t_new) > scrvusd_rate_oracle.raw_price(t_new)
+    print(scrvusd_rate_oracle.filtered_price(t_new))
+
+    # as time passes, we must now have different price
+    assert scrvusd_rate_oracle.filtered_price(full_profit_unlock_date + distribution_time) == int(
+        10**36 * 10_000 // (10_000 * 10**18 - 2 * shares_to_distribute)
     )
