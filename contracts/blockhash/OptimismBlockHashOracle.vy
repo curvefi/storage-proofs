@@ -4,11 +4,14 @@
 @notice A contract that saves L1 block hashes.
 @license MIT
 @author curve.fi
-@custom:version 0.0.1
+@custom:version 0.1.0
 @custom:security security@curve.fi
 """
 
-version: public(constant(String[8])) = "0.0.1"
+import IBlockHashOracle
+implements: IBlockHashOracle
+
+version: public(constant(String[8])) = "0.1.0"
 
 interface IL1Block:
     def number() -> uint64: view
@@ -26,8 +29,12 @@ event ApplyBlockHash:
 
 L1_BLOCK: constant(IL1Block) = IL1Block(0x4200000000000000000000000000000000000015)
 
+MAX_LOOKUP: constant(uint256) = 7 * 86400  # A week
+
 block_hash: public(HashMap[uint256, bytes32])
 commitments: public(HashMap[address, HashMap[uint256, bytes32]])
+
+last_applied: uint256
 
 
 @view
@@ -35,7 +42,8 @@ commitments: public(HashMap[address, HashMap[uint256, bytes32]])
 def get_block_hash(_number: uint256) -> bytes32:
     """
     @notice Query the block hash of a block.
-    @dev Reverts for block numbers which have yet to be set.
+    @dev Reverts for unknown block numbers or if not supported.
+    @param _number Number of the block to look for.
     """
     block_hash: bytes32 = self.block_hash[_number]
     assert block_hash != empty(bytes32)
@@ -48,9 +56,10 @@ def get_block_hash(_number: uint256) -> bytes32:
 def get_state_root(_number: uint256) -> bytes32:
     """
     @notice Query the state root hash of a block.
-    @dev Reverts for block numbers which have yet to be set.
+    @dev Reverts for unknown block numbers or if not supported.
+    @param _number Number of the block to look for.
     """
-    raise "Not implemented"
+    raise "NotImplemented"
 
 
 @internal
@@ -59,6 +68,7 @@ def _update_block_hash() -> (uint256, bytes32):
     hash: bytes32 = staticcall L1_BLOCK.hash()
     self.block_hash[number] = hash
 
+    self.last_applied = max(self.last_applied, number)
     return number, hash
 
 
@@ -89,3 +99,22 @@ def apply() -> uint256:
 
     log ApplyBlockHash(number, hash)
     return number
+
+
+@view
+@external
+def find_known_block_number(_before: uint256=0) -> uint256:
+    """
+    @notice Find known block number, not optimized for on-chain use.
+        No guarantee to be the last available block.
+    @dev Reverts if not supported or couldn't find.
+    @param _before Max block number to look for (can be used as init search point).
+    """
+    last_applied: uint256 = self.last_applied
+    if _before == 0 or last_applied < _before:
+        return last_applied
+
+    for i: uint256 in range(MAX_LOOKUP):
+        if self.block_hash[_before - i] != empty(bytes32):
+            return _before - i
+    raise "NotFound"

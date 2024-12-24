@@ -13,7 +13,7 @@ import time
 
 def test_default_behavior(scrvusd_rate_oracle, verifier_mock):
     ts = int(time.time())
-    params_array = [0, 0, 1, 0, 0, 0, 0]
+    params_array = [1, 0, 1, 0, 0, 0, 0]
     with boa.env.prank(verifier_mock):
         scrvusd_rate_oracle.update_price(params_array, ts)
         events = scrvusd_rate_oracle.get_logs()

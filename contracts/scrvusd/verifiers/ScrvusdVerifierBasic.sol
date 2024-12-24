@@ -7,6 +7,7 @@ import {StateProofVerifier as Verifier} from "../../xdao/contracts/libs/StatePro
 
 interface IBlockHashOracle {
     function get_block_hash(uint256 _number) external view returns (bytes32);
+    function get_state_root(uint256 _number) external view returns (bytes32);
 }
 
 contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
@@ -20,7 +21,7 @@ contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
 
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the parameters
-    function verify(
+    function verifyScrvusdByBlockHash(
         bytes memory _block_header_rlp,
         bytes memory _proof_rlp
     ) external returns (uint256) {
@@ -33,5 +34,18 @@ contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
 
         uint256[PARAM_CNT] memory params = _extractParametersFromProof(block_header.stateRootHash, _proof_rlp);
         return _updatePrice(params, block_header.timestamp);
+    }
+
+    /// @param _block_number Number of the block to use state root hash
+    /// @param _proof_rlp The state proof of the parameters
+    function verifyScrvusdByStateRoot(
+        uint256 _block_number,
+        bytes memory _proof_rlp
+    ) external returns (uint256) {
+        bytes32 state_root = IBlockHashOracle(BLOCK_HASH_ORACLE).get_state_root(_block_number);
+
+        uint256[PARAM_CNT] memory params = _extractParametersFromProof(state_root, _proof_rlp);
+        // Use last_profit_update as the timestamp surrogate
+        return _updatePrice(params, params[5]);
     }
 }
