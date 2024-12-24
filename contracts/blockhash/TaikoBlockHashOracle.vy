@@ -19,7 +19,7 @@ interface ISignalService:
 SIGNAL_SERVICE: constant(ISignalService) = ISignalService(0x1670000000000000000000000000000000000005)
 H_STATE_ROOT: public(constant(bytes32)) = keccak256("STATE_ROOT")
 
-MAX_LOOKUP: constant(uint256) = 3600  # An hour
+MAX_LOOKUP: constant(uint256) = 3600 // 12  # An hour
 
 
 @view
@@ -59,15 +59,29 @@ def find_known_block_number(_before: uint256=0) -> uint256:
     @param _before Max block number to look for (can be used as init search point).
     """
     assert _before > 0, "NeedMaxBlock"
+
     block_id: uint64 = empty(uint64)
     state_root: bytes32 = empty(bytes32)
+
+    status: bool = False
+    result: Bytes[64] = empty(Bytes[64])
     for i: uint256 in range(MAX_LOOKUP):
-        block_id, state_root = staticcall SIGNAL_SERVICE.getSyncedChainData(
-            1,
-            H_STATE_ROOT,
-            convert(_before - i, uint64),
-            #  revert_on_failure=False,
+        status, result = raw_call(
+            SIGNAL_SERVICE.address,
+            abi_encode(
+                convert(1, uint64),
+                H_STATE_ROOT,
+                convert(_before - i, uint64),
+                method_id=method_id("getSyncedChainData(uint64,bytes32,uint64)"),
+            ),
+            max_outsize=64,
+            is_static_call=True,
+            revert_on_failure=False,
         )
+        if not status:
+            continue
+
+        state_root = convert(slice(result, 32, 32), bytes32)
         if state_root != empty(bytes32):
             return _before - i
     raise "NotFound"

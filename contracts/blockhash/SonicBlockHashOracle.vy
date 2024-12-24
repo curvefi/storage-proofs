@@ -1,7 +1,7 @@
 # pragma version 0.4.0
 """
-@title Optimism Block Hash oracle
-@notice A contract that saves L1 block hashes.
+@title Sonic Block Hash oracle
+@notice A contract that saves L1 state roots.
 @license MIT
 @author curve.fi
 @custom:version 0.1.0
@@ -13,19 +13,27 @@ implements: IBlockHashOracle
 
 version: public(constant(String[8])) = "0.1.0"
 
-interface IL1Block:
-    def number() -> uint64: view
-    def hash() -> bytes32: view
+interface IStateOracle:
+    def lastBlockNum() -> uint256: view
+    def lastState() -> bytes32: view
+    def lastUpdateTime() -> uint256: view
+    def chainId() -> uint256: view
 
 
-L1_BLOCK: constant(IL1Block) = IL1Block(0x4200000000000000000000000000000000000015)
+STATE_ORACLE: public(immutable(IStateOracle))
 
 MAX_LOOKUP: constant(uint256) = 7 * 86400  # A week
 
-block_hash: public(HashMap[uint256, bytes32])
+state_root: public(HashMap[uint256, bytes32])
 commitments: public(HashMap[address, HashMap[uint256, bytes32]])
 
 last_applied: uint256
+
+
+@deploy
+def __init__(_state_oracle: IStateOracle):
+    STATE_ORACLE = _state_oracle
+    assert staticcall STATE_ORACLE.chainId() == 1
 
 
 @view
@@ -36,13 +44,7 @@ def get_block_hash(_number: uint256) -> bytes32:
     @dev Reverts for unknown block numbers or if not supported.
     @param _number Number of the block to look for.
     """
-    block_hash: bytes32 = self.block_hash[_number]
-    if block_hash == empty(bytes32) and _number == convert(staticcall L1_BLOCK.number(), uint256):
-        # try fetching current data
-        block_hash = staticcall L1_BLOCK.hash()
-    assert block_hash != empty(bytes32)
-
-    return block_hash
+    raise "NotImplemented"
 
 
 @view
@@ -53,7 +55,13 @@ def get_state_root(_number: uint256) -> bytes32:
     @dev Reverts for unknown block numbers or if not supported.
     @param _number Number of the block to look for.
     """
-    raise "NotImplemented"
+    state_root: bytes32 = self.state_root[_number]
+    if state_root == empty(bytes32) and _number == staticcall STATE_ORACLE.lastBlockNum():
+        # try fetching current data
+        state_root = staticcall STATE_ORACLE.lastState()
+    assert state_root != empty(bytes32)
+
+    return state_root
 
 
 @view
@@ -70,16 +78,16 @@ def find_known_block_number(_before: uint256=0) -> uint256:
         return last_applied
 
     for i: uint256 in range(MAX_LOOKUP):
-        if self.block_hash[_before - i] != empty(bytes32):
+        if self.state_root[_before - i] != empty(bytes32):
             return _before - i
     raise "NotFound"
 
 
 @internal
-def _update_block_hash() -> (uint256, bytes32):
-    number: uint256 = convert(staticcall L1_BLOCK.number(), uint256)
-    hash: bytes32 = staticcall L1_BLOCK.hash()
-    self.block_hash[number] = hash
+def _update_state_root() -> (uint256, bytes32):
+    number: uint256 = staticcall STATE_ORACLE.lastBlockNum()
+    hash: bytes32 = staticcall STATE_ORACLE.lastState()
+    self.state_root[number] = hash
 
     self.last_applied = max(self.last_applied, number)
     return number, hash
@@ -88,12 +96,12 @@ def _update_block_hash() -> (uint256, bytes32):
 @external
 def commit() -> uint256:
     """
-    @notice Commit (and apply) a block hash.
+    @notice Commit (and apply) a state root.
     @dev Same as `apply()` but saves committer
     """
     number: uint256 = 0
     hash: bytes32 = empty(bytes32)
-    number, hash = self._update_block_hash()
+    number, hash = self._update_state_root()
 
     self.commitments[msg.sender][number] = hash
     log IBlockHashOracle.CommitBlockHash(msg.sender, number, hash)
@@ -104,11 +112,11 @@ def commit() -> uint256:
 @external
 def apply() -> uint256:
     """
-    @notice Apply a block hash.
+    @notice Apply a state root.
     """
     number: uint256 = 0
     hash: bytes32 = empty(bytes32)
-    number, hash = self._update_block_hash()
+    number, hash = self._update_state_root()
 
     log IBlockHashOracle.ApplyBlockHash(number, hash)
     return number
