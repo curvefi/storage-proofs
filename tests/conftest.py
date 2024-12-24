@@ -32,6 +32,11 @@ CHAINS_DICT = {
 }
 
 
+@pytest.fixture
+def alice():
+    return boa.env.generate_address()
+
+
 @pytest.fixture()
 def w3_eth():
     rpc_url = CHAINS_DICT["mainnet"]["rpc"]

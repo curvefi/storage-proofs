@@ -55,3 +55,14 @@ def find_known_block_number(_before: uint256=0) -> uint256:
     @param _before Max block number to look for (can be used as init search point).
     """
     ...
+
+
+# When commit-apply scheme:
+# @external
+# def commit() -> uint256:
+#     ...
+#
+#
+# @external
+# def apply() -> uint256:
+#     ...
