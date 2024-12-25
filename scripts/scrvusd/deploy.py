@@ -1,6 +1,5 @@
 import boa
 import boa_solidity
-import eth_abi
 
 from web3 import Web3
 import json
@@ -8,9 +7,8 @@ import os
 
 from getpass import getpass
 from eth_account import account
-from hexbytes import HexBytes
 
-from proof import generate_proof, submit_proof, PROVER
+from proof import generate_proof, submit_proof
 
 
 NETWORK = (
@@ -38,7 +36,7 @@ def deploy():
         10**18, 10**13
     )
 
-    prover = boa_solidity.load_partial_solc(
+    verifier = boa_solidity.load_partial_solc(
         "contracts/scrvusd/verifiers/ScrvusdVerifier.sol",
         compiler_args={
             "solc_version": "0.8.18",
@@ -49,23 +47,23 @@ def deploy():
         },
     ).deploy(boracle.address, soracle.address)
 
-    soracle.set_prover(prover)
+    soracle.set_verifier(verifier)
 
-    return boracle, soracle, prover
+    return boracle, soracle, verifier
 
 
-def prove(boracle, soracle, prover):
+def prove(boracle, soracle, verifier):
     number = boracle.apply()
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_proof(eth_web3, number, log=True)
-    submit_proof(proofs, prover)
+    submit_proof(proofs, verifier)
     print(f"Sibmitted proof")
 
 
-def simulate(boracle, soracle, prover):
+def simulate(boracle, soracle, verifier):
     print(f"Initial price: {soracle.price_v1()}")
-    prove(boracle, soracle, prover)
+    prove(boracle, soracle, verifier)
     print(f"Price just after: {soracle.price_v1()}")
     already = 0
     for i in [1, 2, 5, 10, 60, 3600, 10 * 3600, 86400, 7 * 86400]:
