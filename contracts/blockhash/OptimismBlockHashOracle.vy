@@ -9,7 +9,10 @@
 """
 
 import IBlockHashOracle
+import IBlockHashRetain
+
 implements: IBlockHashOracle
+implements: IBlockHashRetain
 
 version: public(constant(String[8])) = "0.1.0"
 
@@ -96,8 +99,8 @@ def commit() -> uint256:
     number, hash = self._update_block_hash()
 
     self.commitments[msg.sender][number] = hash
-    log IBlockHashOracle.CommitBlockHash(msg.sender, number, hash)
-    log IBlockHashOracle.ApplyBlockHash(number, hash)
+    log IBlockHashRetain.CommitBlockHash(msg.sender, number, hash)
+    log IBlockHashRetain.ApplyBlockHash(number, hash)
     return number
 
 
@@ -110,5 +113,5 @@ def apply() -> uint256:
     hash: bytes32 = empty(bytes32)
     number, hash = self._update_block_hash()
 
-    log IBlockHashOracle.ApplyBlockHash(number, hash)
+    log IBlockHashRetain.ApplyBlockHash(number, hash)
     return number

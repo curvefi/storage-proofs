@@ -9,19 +9,6 @@
 @notice Interface for Ethereum block hash and/or state root hash feed on other networks.
 """
 
-# @dev Emitted when someone commits block hash.
-# Note that not all oracles use commit-apply scheme and this might be ignored.
-event CommitBlockHash:
-    committer: indexed(address)
-    number: indexed(uint256)
-    hash: bytes32
-
-# @dev Emitted when commits threshold reached and blockhash is applied.
-# Note that not all oracles use commit-apply scheme and this might be ignored.
-event ApplyBlockHash:
-    number: indexed(uint256)
-    hash: bytes32
-
 
 @view
 @external
@@ -55,14 +42,3 @@ def find_known_block_number(_before: uint256=0) -> uint256:
     @param _before Max block number to look for (can be used as init search point).
     """
     ...
-
-
-# When commit-apply scheme:
-# @external
-# def commit() -> uint256:
-#     ...
-#
-#
-# @external
-# def apply() -> uint256:
-#     ...
