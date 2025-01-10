@@ -10,7 +10,8 @@ uint256 constant PROOF_CNT = 1 + PARAM_CNT;
 interface IScrvusdOracle {
     function update_price(
         uint256[PARAM_CNT] memory _parameters,
-        uint256 ts
+        uint256 _ts,
+        uint256 _block_number
     ) external returns (uint256);
 }
 
@@ -77,8 +78,9 @@ abstract contract ScrvusdVerifierCore {
     ///      Both child contracts use the same oracle call, differing only in how they obtain the timestamp.
     function _updatePrice(
         uint256[PARAM_CNT] memory params,
-        uint256 ts
+        uint256 ts,
+        uint256 number
     ) internal returns (uint256) {
-        return IScrvusdOracle(SCRVUSD_ORACLE).update_price(params, ts);
+        return IScrvusdOracle(SCRVUSD_ORACLE).update_price(params, ts, number);
     }
 }

@@ -60,6 +60,9 @@ MAX_BPS_EXTENDED: constant(uint256) = 1_000_000_000_000
 
 
 verifier: public(address)
+
+last_block_number: public(uint256)
+
 # smoothening
 last_prices: uint256[2]
 last_update: uint256
@@ -107,7 +110,7 @@ def __init__(_initial_price: uint256):
 
 
 @external
-def update_price(_parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
+def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
@@ -115,6 +118,9 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
     @return Relative price change of final price with 10^18 precision
     """
     assert msg.sender == self.verifier
+    # Allowing same block updates for fixing bad blockhash provided (if possible)
+    assert self.last_block_number <= _block_number, "Outdated"
+    self.last_block_number = _block_number
 
     # update last_prices with previous parameters
     # self.last_prices = [self._price_v0(), self._price_v1()]

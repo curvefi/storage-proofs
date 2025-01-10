@@ -33,7 +33,7 @@ contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
         );
 
         uint256[PARAM_CNT] memory params = _extractParametersFromProof(block_header.stateRootHash, _proof_rlp);
-        return _updatePrice(params, block_header.timestamp);
+        return _updatePrice(params, block_header.timestamp, block_header.number);
     }
 
     /// @param _block_number Number of the block to use state root hash
@@ -46,6 +46,6 @@ contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
 
         uint256[PARAM_CNT] memory params = _extractParametersFromProof(state_root, _proof_rlp);
         // Use last_profit_update as the timestamp surrogate
-        return _updatePrice(params, params[5]);
+        return _updatePrice(params, params[5], _block_number);
     }
 }

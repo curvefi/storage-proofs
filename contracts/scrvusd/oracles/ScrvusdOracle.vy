@@ -141,7 +141,7 @@ def _unlocked_shares(
 
 
 @view
-def _total_supply(parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
+def _total_supply(parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT], ts: uint256) -> uint256:
     # Need to account for the shares issued to the vault that have unlocked.
     # return self.total_supply - self._unlocked_shares()
     return parameters[ASSETS_PARAM_CNT + 0] -\
@@ -154,7 +154,7 @@ def _total_supply(parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
         )
 
 @view
-def _total_assets(parameters: uint256[ALL_PARAM_CNT]) -> uint256:
+def _total_assets(parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT]) -> uint256:
     """
     @notice Total amount of assets that are in the vault and in the strategies.
     """
@@ -166,11 +166,13 @@ def _total_assets(parameters: uint256[ALL_PARAM_CNT]) -> uint256:
 def update_price(
     _parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT],
     _ts: uint256,
+    _block_number: uint256,
 ) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
     @param _ts Timestamp at which these parameters are true
+    @param _block_number Block number of parameters to linearize updates (ignored in this version)
     @return Relative price change of final price with 10^18 precision
     """
     assert msg.sender == self.prover
