@@ -19,9 +19,10 @@ exports: ownable.__interface__
 event PriceUpdate:
     new_price: uint256  # price to achieve
     price_params_ts: uint256  # timestamp at which price is recorded
+    block_number: uint256
 
-event SetProver:
-    prover: address
+event SetVerifier:
+    verifier: address
 
 
 # scrvUSD Vault rate replication
@@ -37,8 +38,9 @@ SUPPLY_PARAM_CNT: constant(uint256) = 5
 ALL_PARAM_CNT: constant(uint256) = ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT
 MAX_BPS_EXTENDED: constant(uint256) = 1_000_000_000_000
 
-prover: public(address)
+verifier: public(address)
 
+last_block_number: public(uint256)
 # smoothening
 last_prices: uint256[2]
 last_update: uint256
@@ -72,7 +74,7 @@ def __init__(_initial_price: uint256, _max_acceleration: uint256):
 def price_v0(_i: uint256=0) -> uint256:
     """
     @notice Get lower bound of `scrvUSD.pricePerShare()`
-    @dev Price is updated in steps, need to prove every % changed
+    @dev Price is updated in steps, need to verify every % changed
     @param _i 0 (default) for `pricePerShare()` and 1 for `pricePerAsset()`
     """
     return self._price_v0() if _i == 0 else 10**36 // self._price_v0()
@@ -180,24 +182,28 @@ def _raw_price(ts: uint256) -> uint256:
 
 
 @external
-def update_price(_parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
+def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
-    @param ts Timestamp at which these parameters are true
+    @param _ts Timestamp at which these parameters are true
+    @param _block_number Block number of parameters to linearize updates
     @return Relative price change of final price with 10^18 precision
     """
-    assert msg.sender == self.prover
+    assert msg.sender == self.verifier
+    # Allowing same block updates for fixing bad blockhash provided (if possible)
+    assert self.last_block_number <= _block_number, "Outdated"
+    self.last_block_number = _block_number
 
     self.last_prices = [self._price_v0(), self._price_v1()]
+    self.last_update = block.timestamp
+
     current_price: uint256 = self._raw_price(self.price_params_ts)
     self.price_params = _parameters
-    self.price_params_ts = ts
-    new_price: uint256 = self._raw_price(ts)
-    # price is non-decreasing
-    assert current_price <= new_price, "Outdated"
+    self.price_params_ts = _ts
+    new_price: uint256 = self._raw_price(_ts)
 
-    log PriceUpdate(new_price, ts)
+    log PriceUpdate(new_price, _ts, _block_number)
     return new_price * 10 ** 18 // current_price
 
 
@@ -216,11 +222,11 @@ def set_max_acceleration(_max_acceleration: uint256):
 
 
 @external
-def set_prover(_prover: address):
+def set_verifier(_verifier: address):
     """
-    @notice Set the account with prover permissions.
+    @notice Set the account with verifier permissions.
     """
     ownable._check_owner()
 
-    self.prover = _prover
-    log SetProver(_prover)
+    self.verifier = _verifier
+    log SetVerifier(_verifier)
