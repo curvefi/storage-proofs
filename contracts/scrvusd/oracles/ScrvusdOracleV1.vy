@@ -201,8 +201,8 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_numbe
     current_price: uint256 = self._raw_price(self.price_params_ts)
     self.price_params = _parameters
     self.price_params_ts = _ts
-    new_price: uint256 = self._raw_price(_ts)
 
+    new_price: uint256 = self._raw_price(_ts)
     log PriceUpdate(new_price, _ts, _block_number)
     return new_price * 10 ** 18 // current_price
 

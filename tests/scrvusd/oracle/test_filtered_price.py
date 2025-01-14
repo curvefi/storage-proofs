@@ -29,7 +29,7 @@ def test_default_behavior(scrvusd_rate_oracle, verifier_mock):
     ]  # balance_of_self
 
     with boa.env.prank(verifier_mock):
-        scrvusd_rate_oracle.update_price(params_array, ts)
+        scrvusd_rate_oracle.update_price(params_array, ts, 1)
 
     # price at period beginning must be 1
     assert scrvusd_rate_oracle.raw_price(ts) == 10**18

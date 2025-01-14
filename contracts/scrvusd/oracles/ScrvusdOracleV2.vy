@@ -114,7 +114,8 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_numbe
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
-    @param ts Timestamp at which these parameters are true
+    @param _ts Timestamp at which these parameters are true
+    @param _block_number Block number of parameters to linearize updates
     @return Relative price change of final price with 10^18 precision
     """
     assert msg.sender == self.verifier
@@ -128,13 +129,13 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_numbe
 
     current_price: uint256 = self._raw_price(self.price_params_ts)
     self.price_params = _parameters
-    self.price_params_ts = ts
+    self.price_params_ts = _ts
 
-    updated_price: uint256 = self._raw_price(ts)
+    updated_price: uint256 = self._raw_price(_ts)
     # price is non-decreasing
     assert current_price <= updated_price, "Outdated"
 
-    log PriceUpdate(updated_price, ts)
+    log PriceUpdate(updated_price, _ts)
     # return relative price change, because we want to know how big was a change
     # for autiomated actions rewards calculation
     return updated_price * 10**18 // current_price
