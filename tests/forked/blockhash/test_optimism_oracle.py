@@ -3,12 +3,13 @@ import pytest
 import boa
 
 from conftest import EMPTY_BYTES32
+from tests.forked.conftest import Chain
 
 
 @pytest.fixture(scope="module", autouse=True)
-def set_network():
+def set_network(rpc):
     # return to previous env after
-    boa.fork(f"https://rpc.mantle.xyz/")
+    boa.fork(rpc(Chain.MANTLE))
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
 
 

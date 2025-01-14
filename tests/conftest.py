@@ -1,9 +1,6 @@
 import boa
-import boa_solidity
 
 import pytest
-import os
-from web3 import Web3
 
 CURVE_DAO = boa.env.generate_address()
 DEFAULT_BLOCK_NUMBER = 21369420
@@ -11,53 +8,27 @@ DEFAULT_BLOCK_HASH = bytes.fromhex(
     "37CFBA409B3C9763A464565798C166B007C29F613ED9900C2EFA6342A3A5A65C"
 )
 
-CHAINS_DICT = {
-    "mainnet": {
-        "id": 1,
-        "rpc": f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID']}",
-    },
-    "optimism": {
-        "id": 10,
-        "rpc": "https://mainnet.optimism.io",
-    },
-    "base": {"id": 8453, "rpc": "https://mainnet.base.org"},
-    "fraxtal": {"id": 252, "rpc": "https://rpc.frax.com"},
-    "mantle": {"id": 5000, "rpc": "https://rpc.mantle.xyz/"},
-    "arbitrum": {
-        "id": 42161,
-        "rpc": "https://arb1.arbitrum.io/rpc",
-    },
-    "taiko": {"id": 167000, "rpc": "https://taiko.drpc.org"},
-    "sonic": {"id": 146, "rpc": "https://rpc.soniclabs.com"},
-}
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--forked", action="store_true", default=False, help="Run tests in forked environment"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--forked"):
+        return
+
+    # Skip tests in `forked/` directory unless --forked is provided
+    skip_forked = pytest.mark.skip(reason="Need --forked option to run")
+    for item in items:
+        if item.path and "/forked/" in str(item.path):
+            item.add_marker(skip_forked)
 
 
 @pytest.fixture
 def alice():
     return boa.env.generate_address()
-
-
-@pytest.fixture()
-def w3_eth():
-    rpc_url = CHAINS_DICT["mainnet"]["rpc"]
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
-    assert w3.is_connected(), f"Failed to connect to mainnet ({rpc_url})"
-    return w3
-
-
-# parametrize the fixture to allow for different chains
-@pytest.fixture(params=CHAINS_DICT.keys())
-def w3_sidechain(request):
-    chain_name = request.param  # Parameter passed by the test
-    if chain_name not in CHAINS_DICT:
-        pytest.fail(
-            f"Unknown chain: {chain_name}. Available chains: {', '.join(CHAINS_DICT.keys())}"
-        )
-
-    rpc_url = CHAINS_DICT[chain_name]["rpc"]
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
-    assert w3.is_connected(), f"Failed to connect to chain {chain_name} ({rpc_url})"
-    return w3
 
 
 @pytest.fixture()
