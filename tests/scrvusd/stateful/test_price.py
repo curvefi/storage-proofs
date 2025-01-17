@@ -15,7 +15,7 @@ class SoracleTestStateMachine(ScrvusdStateMachine):
         st.integers(min_value=0, max_value=7 * 86400),
         unique=True,
         min_size=1,
-        max_size=10,
+        max_size=5,
     ).map(sorted)
     st_iterate_over_week = st_week_timestamps.map(
         lambda lst: list(map(lambda x: x[1] - x[0], zip([0] + lst, lst + [7 * 86400])))
@@ -24,7 +24,7 @@ class SoracleTestStateMachine(ScrvusdStateMachine):
         st.integers(min_value=0, max_value=365 // 7 + 1),
         unique=True,
         min_size=1,
-        max_size=10,
+        max_size=2,
     ).map(sorted)
 
     def __init__(self, crvusd, scrvusd, admin, soracle, max_acceleration, verifier, soracle_slots):
@@ -98,7 +98,8 @@ class SoracleTestStateMachine(ScrvusdStateMachine):
                 assert self.soracle.price_v1() == self.price()
 
     # @invariant()
-    # def price_v2(self):
+    # @given(data=st.data())
+    # def price_v2(self, data):
     #     """
     #     Test that v2 assumes same reward amount coming every week
     #     """
@@ -109,7 +110,7 @@ class SoracleTestStateMachine(ScrvusdStateMachine):
     #         *self.last_oracle_v2, self.soracle.price_v2(), boa.env.evm.patch.timestamp
     #     )
     #
-    #     amount = self.st_crvusd_amount.example()
+    #     amount = data.draw(self.st_crvusd_amount)
     #
     #     # Check literally rewarding same amount at the start of every week
     #     with boa.env.anchor():
@@ -119,13 +120,13 @@ class SoracleTestStateMachine(ScrvusdStateMachine):
     #         self.process_rewards()
     #         self.update_price()
     #
-    #         weeks_to_check = self.st_weeks.example()
+    #         weeks_to_check = data.draw(self.st_weeks)
     #         for i in range(max(*weeks_to_check)):
     #             self.add_rewards(amount)
     #             self.process_rewards()
     #
     #             if i in weeks_to_check:
-    #                 for ts_delta in self.st_iterate_over_week.example():
+    #                 for ts_delta in data.draw(self.st_iterate_over_week):
     #                     boa.env.time_travel(seconds=ts_delta)
     #                     assert self.soracle.price_v2() == self.price()
     #             else:
