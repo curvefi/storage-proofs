@@ -2,11 +2,9 @@ import boa
 
 import pytest
 
-CURVE_DAO = boa.env.generate_address()
-DEFAULT_BLOCK_NUMBER = 21369420
-DEFAULT_BLOCK_HASH = bytes.fromhex(
-    "37CFBA409B3C9763A464565798C166B007C29F613ED9900C2EFA6342A3A5A65C"
-)
+boa.env.enable_fast_mode()
+
+EMPTY_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
 
 def pytest_addoption(parser):
@@ -26,61 +24,21 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_forked)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def alice():
     return boa.env.generate_address()
 
 
-@pytest.fixture()
-def block_number():
-    return DEFAULT_BLOCK_NUMBER
-
-
-@pytest.fixture()
-def curve_dao():
-    return CURVE_DAO
-
-
-@pytest.fixture()
-def dev_deployer():
+@pytest.fixture(scope="session")
+def farmer():
     return boa.env.generate_address()
 
 
-@pytest.fixture()
-def verifier_mock():
+@pytest.fixture(scope="session")
+def admin():
     return boa.env.generate_address()
 
 
-@pytest.fixture()
-def blockhash_oracle_mock(dev_deployer):
-    contract_deployer = boa.load_partial("tests/mocks/BlockhashOracleMock.vy")
-    with boa.env.prank(dev_deployer):
-        contract = contract_deployer(DEFAULT_BLOCK_HASH)
-    return contract
-
-
-@pytest.fixture()
-def scrvusd_rate_oracle(dev_deployer, verifier_mock):
-    contract_deployer = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV2.vy")
-    with boa.env.prank(dev_deployer):
-        contract = contract_deployer(10**18)
-        contract.set_verifier(verifier_mock)
-    return contract
-
-
-@pytest.fixture()
-def scrvusd_rate_verifier(blockhash_oracle_mock, scrvusd_rate_oracle, dev_deployer):
-    contract_deployer = boa.load_partial_solc(
-        "contracts/scrvusd/verifiers/ScrvusdVerifierBasic.sol",
-        compiler_args={
-            "optimize": True,
-            "optimize_runs": 200,
-            "import_remappings": "hamdiallam/Solidity-RLP@2.0.7=./node_modules/solidity-rlp",
-        },
-    )
-    with boa.env.prank(dev_deployer):
-        contract = contract_deployer.deploy(
-            blockhash_oracle_mock.address, scrvusd_rate_oracle.address
-        )
-        scrvusd_rate_oracle.set_verifier(contract)
-    return contract
+@pytest.fixture(scope="module")
+def boracle():
+    return boa.load("tests/mocks/BlockhashOracleMock.vy", 21369420)

@@ -2,7 +2,7 @@ import pytest
 
 import boa
 
-from conftest import EMPTY_BYTES32
+from tests.conftest import EMPTY_BYTES32
 from tests.forked.conftest import Chain
 
 

@@ -27,6 +27,6 @@ CHAINS_DICT = {
     Chain.ARBITRUM: {
         "rpc": "https://arb1.arbitrum.io/rpc",
     },
-    Chain.TAIKO: {"rpc": "https://taiko.drpc.org"},
+    Chain.TAIKO: {"rpc": "https://rpc.taiko.xyz"},
     Chain.SONIC: {"rpc": "https://rpc.soniclabs.com"},
 }
