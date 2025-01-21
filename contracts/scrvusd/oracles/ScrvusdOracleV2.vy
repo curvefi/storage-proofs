@@ -233,7 +233,6 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
     max_periods: uint256 = self.max_v2_duration
     number_of_periods: uint256 = min((parameters_ts - params.full_profit_unlock_date) // period + 1, max_periods)
 
-    # constant locked shares
     for i: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
         params.total_supply += params.balance_of_self
         params.total_idle += params.balance_of_self * (params.total_idle + params.total_debt) // params.total_supply
