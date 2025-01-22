@@ -3,13 +3,13 @@ import pytest
 import boa
 
 from tests.conftest import EMPTY_BYTES32
-from tests.forked.conftest import Chain
+from tests.shared.forked.fixtures import Chain
 
 
 @pytest.fixture(scope="module", autouse=True)
-def set_network(rpc):
+def set_network(forked_rpc):
     # return to previous env after
-    boa.fork(rpc(Chain.MANTLE))
+    boa.fork(forked_rpc(Chain.MANTLE))
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
 
 
@@ -19,13 +19,13 @@ def boracle(set_network):
 
 
 @pytest.mark.parametrize("operation", ["commit", "apply"])
-def test_update(boracle, alice, operation):
-    with boa.env.prank(alice):
+def test_update(boracle, anne, operation):
+    with boa.env.prank(anne):
         number = getattr(boracle, operation)()
 
     blockhash = boracle.get_block_hash(number)
     assert blockhash != EMPTY_BYTES32, "BlockHash not set"
-    assert boracle.commitments(alice, number) == blockhash if operation == "commit" else EMPTY_BYTES32, \
+    assert boracle.commitments(anne, number) == blockhash if operation == "commit" else EMPTY_BYTES32, \
         "Commitment not registered"
     assert boracle.find_known_block_number() == number, "Could not find new block"
     assert boracle.find_known_block_number(number) == number, "Could not find new block"

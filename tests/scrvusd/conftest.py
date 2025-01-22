@@ -5,6 +5,10 @@ import eth_abi
 import web3
 
 
+DEFAULT_MAX_ACCELERATION = 2 * 10 ** 12
+DEFAULT_MAX_V2_DURATION = 6 * 4
+
+
 @pytest.fixture(scope="module")
 def crvusd():
     return boa.load("contracts/testing/MockERC20.vy", "CRV USD", "crvUSD", 18)
@@ -26,15 +30,10 @@ def scrvusd(crvusd, admin):
     return scrvusd
 
 
-@pytest.fixture(scope="module", params=[10 ** 12])
-def max_acceleration(request):
-    return request.param
-
-
 @pytest.fixture(scope="module")
-def soracle(max_acceleration, admin):
+def soracle(admin):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", 10 ** 18, max_acceleration)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", 10 ** 18)
     return contract
 
 
@@ -55,5 +54,9 @@ def soracle_slots(scrvusd):
 def verifier(soracle, admin):
     verifier = boa.env.generate_address()
     with boa.env.prank(admin):
-        soracle.set_verifier(verifier)
+        if hasattr(soracle, "set_verifier"):
+            soracle.set_verifier(verifier)
+        else:
+            soracle.grantRole(soracle.PRICE_PARAMETERS_VERIFIER(), verifier)
+            soracle.grantRole(soracle.UNLOCK_TIME_VERIFIER(), verifier)
     return verifier

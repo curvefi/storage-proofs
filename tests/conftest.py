@@ -6,6 +6,10 @@ boa.env.enable_fast_mode()
 
 EMPTY_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
+pytest_plugins = [
+    "shared.forked.fixtures",
+]
+
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -25,12 +29,20 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-def alice():
+def anne():
+    """
+    "How wonderful it is that nobody need wait a single moment before starting to improve the world."
+    – Anne Frank
+    """
     return boa.env.generate_address()
 
 
 @pytest.fixture(scope="session")
-def farmer():
+def leo():
+    """
+    "Everyone thinks of changing the world, but no one thinks of changing himself."
+    – Leo Tolstoy
+    """
     return boa.env.generate_address()
 
 
