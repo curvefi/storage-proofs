@@ -24,6 +24,9 @@ event PriceUpdate:
 event SetVerifier:
     verifier: address
 
+event SetMaxAcceleration:
+    max_acceleration: uint256
+
 
 # scrvUSD Vault rate replication
 # 0 total_debt
@@ -219,6 +222,8 @@ def set_max_acceleration(_max_acceleration: uint256):
 
     assert 10 ** 8 <= _max_acceleration and _max_acceleration <= 10 ** 18
     self.max_acceleration = _max_acceleration
+
+    log SetMaxAcceleration(_max_acceleration)
 
 
 @external
