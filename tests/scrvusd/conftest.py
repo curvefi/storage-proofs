@@ -11,13 +11,13 @@ DEFAULT_MAX_V2_DURATION = 6 * 4
 
 @pytest.fixture(scope="module")
 def crvusd():
-    return boa.load("contracts/testing/MockERC20.vy", "CRV USD", "crvUSD", 18)
+    return boa.load("tests/shared/contracts/MockERC20.vy", "CRV USD", "crvUSD", 18)
 
 
 @pytest.fixture(scope="module")
 def scrvusd(crvusd, admin):
     with boa.env.prank(admin):
-        scrvusd = boa.load("contracts/testing/Vault.vy")
+        scrvusd = boa.load("tests/shared/contracts/Vault.vy")
         scrvusd.initialize(
             crvusd,
             "Savings crvUSD",
