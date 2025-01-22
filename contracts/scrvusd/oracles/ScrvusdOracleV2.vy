@@ -30,8 +30,11 @@ event PriceUpdate:
     price_params_ts: uint256  # timestamp at which price is recorded
     block_number: uint256
 
-event SetVerifier:
-    verifier: address
+event SetMaxAcceleration:
+    max_acceleration: uint256
+
+event SetMaxV2Duration:
+    max_v2_duration: uint256
 
 
 struct PriceParams:
@@ -55,13 +58,11 @@ MAX_V2_DURATION: constant(uint256) = 4 * 12 * 4  # 4 years
 PRICE_PARAMETERS_VERIFIER: public(constant(bytes32)) = keccak256("PRICE_PARAMETERS_VERIFIER")
 UNLOCK_TIME_VERIFIER: public(constant(bytes32)) = keccak256("UNLOCK_TIME_VERIFIER")
 
-verifier: public(address)
-
-last_block_number: public(uint256)
+last_block_number: public(uint256)  # Warning: used both for price parameters and unlock_time
 # smoothening
 last_prices: uint256[3]
 last_update: uint256
-# scrvusd replication parameters
+# scrvUSD replication parameters
 profit_max_unlock_time: public(uint256)
 price_params: PriceParams
 price_params_ts: uint256
@@ -146,8 +147,7 @@ def raw_price(_i: uint256=0, _ts: uint256=block.timestamp, _parameters_ts: uint2
 
 
 @view
-def _smoothed_price(last_price: uint256, ts: uint256, parameters_ts: uint256) -> uint256:
-    raw_price: uint256 = self._raw_price(ts, parameters_ts)
+def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
     max_change: uint256 = self.max_acceleration * (block.timestamp - self.last_update)
     # -max_change <= (raw_price - last_price) <= max_change
     if unsafe_sub(raw_price + max_change, last_price) > 2 * max_change:
@@ -157,17 +157,17 @@ def _smoothed_price(last_price: uint256, ts: uint256, parameters_ts: uint256) ->
 
 @view
 def _price_v0() -> uint256:
-    return self._smoothed_price(self.last_prices[0], self.price_params_ts, self.price_params_ts)
+    return self._smoothed_price(self.last_prices[0], self._raw_price(self.price_params_ts, self.price_params_ts))
 
 
 @view
 def _price_v1() -> uint256:
-    return self._smoothed_price(self.last_prices[1], block.timestamp, self.price_params_ts)
+    return self._smoothed_price(self.last_prices[1], self._raw_price(block.timestamp, self.price_params_ts))
 
 
 @view
 def _price_v2() -> uint256:
-    return self._smoothed_price(self.last_prices[2], block.timestamp, block.timestamp)
+    return self._smoothed_price(self.last_prices[2], self._raw_price(block.timestamp, block.timestamp))
 
 
 @view
@@ -331,6 +331,7 @@ def update_profit_max_unlock_time(_profit_max_unlock_time: uint256, _block_numbe
     # Allowing same block updates for fixing bad blockhash provided (if possible)
     assert self.last_block_number <= _block_number, "Outdated"
     self.last_block_number = _block_number
+
     prev_value: uint256 = self.profit_max_unlock_time
     self.profit_max_unlock_time = _profit_max_unlock_time
     return prev_value != _profit_max_unlock_time
@@ -349,6 +350,8 @@ def set_max_acceleration(_max_acceleration: uint256):
     assert 10 ** 8 <= _max_acceleration and _max_acceleration <= 10 ** 18
     self.max_acceleration = _max_acceleration
 
+    log SetMaxAcceleration(_max_acceleration)
+
 
 @external
 def set_max_v2_duration(_max_v2_duration: uint256):
@@ -360,3 +363,5 @@ def set_max_v2_duration(_max_v2_duration: uint256):
 
     assert _max_v2_duration <= MAX_V2_DURATION
     self.max_v2_duration = _max_v2_duration
+
+    log SetMaxV2Duration(_max_v2_duration)
