@@ -55,10 +55,9 @@ max_acceleration: public(uint256)  # precision 10**18
 
 
 @deploy
-def __init__(_initial_price: uint256, _max_acceleration: uint256):
+def __init__(_initial_price: uint256):
     """
     @param _initial_price Initial price of asset per share (10**18)
-    @param _max_acceleration Maximum acceleration (10**12)
     """
     self.last_prices = [_initial_price, _initial_price]
     self.last_update = block.timestamp
@@ -67,7 +66,10 @@ def __init__(_initial_price: uint256, _max_acceleration: uint256):
     self.price_params[0] = 1  # totalAssets = 1
     self.price_params[2] = 1  # totalSupply = 1
 
-    self.max_acceleration = _max_acceleration
+    # 2 * 10 ** 12 is equivalent to
+    #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
+    #   2) linearly approximated to max 63% APY
+    self.max_acceleration = 2 * 10 ** 12
 
     ownable.__init__()
 

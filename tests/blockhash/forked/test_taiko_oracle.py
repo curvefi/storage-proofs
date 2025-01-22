@@ -2,15 +2,15 @@ import pytest
 
 import boa
 
-from tests.forked.conftest import Chain
+from tests.shared.forked.fixtures import Chain
 
 H_STATE_ROOT = bytes.fromhex("73e6d340850343cc6f001515dc593377337c95a6ffe034fe1e844d4dab5da169")
 
 
 @pytest.fixture(scope="module", autouse=True)
-def set_network(rpc):
+def set_network(forked_rpc):
     # return to previous env after
-    boa.fork(rpc(Chain.TAIKO), block_identifier=707157)
+    boa.fork(forked_rpc(Chain.TAIKO), block_identifier=707157)
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
 
 
