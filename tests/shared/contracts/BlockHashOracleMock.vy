@@ -4,14 +4,7 @@ from contracts.blockhash import IBlockHashOracle
 implements: IBlockHashOracle
 
 block_hash: public(HashMap[uint256, bytes32])
-fallback_hash: public(bytes32)
-
 state_root: public(HashMap[uint256, bytes32])
-
-
-@deploy
-def __init__(_fallback_hash: bytes32):
-    self.fallback_hash = _fallback_hash
 
 
 @view
@@ -24,7 +17,7 @@ def get_block_hash(_number: uint256) -> bytes32:
 
 
 @external
-def set_block_hash(_block_n: uint256, _block_hash: bytes32):
+def _set_block_hash(_block_n: uint256, _block_hash: bytes32):
     self.block_hash[_block_n] = _block_hash
 
 
@@ -38,7 +31,7 @@ def get_state_root(_number: uint256) -> bytes32:
 
 
 @external
-def set_state_root(_block_n: uint256, _state_root: bytes32):
+def _set_state_root(_block_n: uint256, _state_root: bytes32):
     self.state_root[_block_n] = _state_root
 
 
