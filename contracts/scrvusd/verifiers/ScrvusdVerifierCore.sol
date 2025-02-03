@@ -22,8 +22,8 @@ abstract contract ScrvusdVerifierCore {
     using RLPReader for RLPReader.RLPItem;
 
     // Common constants
-    address private constant SCRVUSD = 0x0655977FEb2f289A4aB78af67BAB0d17aAb84367;
-    bytes32 private constant SCRVUSD_HASH = keccak256(abi.encodePacked(SCRVUSD));
+    address private SCRVUSD;
+    bytes32 private SCRVUSD_HASH;
 
     // Storage slots of parameters
     uint256[PROOF_CNT] internal PARAM_SLOTS = [
@@ -39,8 +39,12 @@ abstract contract ScrvusdVerifierCore {
 
     address public immutable SCRVUSD_ORACLE;
 
-    constructor(address _scrvusd_oracle) {
+    constructor(address _scrvusd, address _scrvusd_oracle) {
+        SCRVUSD = _scrvusd;
+        SCRVUSD_HASH = keccak256(abi.encodePacked(SCRVUSD));
         SCRVUSD_ORACLE = _scrvusd_oracle;
+
+        PARAM_SLOTS[7] = uint256(keccak256(abi.encode(18, SCRVUSD)));
     }
 
     /// @dev Extract parameters from the state proof using the given state root.

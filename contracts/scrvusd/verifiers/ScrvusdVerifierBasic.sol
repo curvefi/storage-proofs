@@ -13,8 +13,8 @@ interface IBlockHashOracle {
 contract ScrvusdVerifierBasic is ScrvusdVerifierCore {
     address public immutable BLOCK_HASH_ORACLE;
 
-    constructor(address _block_hash_oracle, address _scrvusd_oracle)
-        ScrvusdVerifierCore(_scrvusd_oracle)
+    constructor(address _scrvusd, address _block_hash_oracle, address _scrvusd_oracle)
+        ScrvusdVerifierCore(_scrvusd, _scrvusd_oracle)
     {
         BLOCK_HASH_ORACLE = _block_hash_oracle;
     }
