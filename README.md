@@ -91,7 +91,11 @@ find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} 
 
 ### Test
 ```shell
-pytest -s
+pytest .
+```
+Forked and slow stateful tests are disabled by default. To include them, use the --forked or --slow flags. For example, to run all tests:
+```shell
+pytest --forked --slow
 ```
 
 ### Run
