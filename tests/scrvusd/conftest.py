@@ -38,7 +38,7 @@ def soracle(admin):
 
 
 @pytest.fixture(scope="module")
-def soracle_slots(scrvusd):
+def soracle_price_slots(scrvusd):
     return [
         21,  # total_debt, slot doesn't exist
         22,  # total_idle
@@ -48,6 +48,11 @@ def soracle_slots(scrvusd):
         40,  # last_profit_update
         int(eth_utils.keccak(eth_abi.encode(["(uint256,address)"], [[18, scrvusd.address]])).hex(), 16),  # balance_of_self
     ]
+
+
+@pytest.fixture(scope="module")
+def soracle_period_slots():
+    return [37]
 
 
 @pytest.fixture(scope="module")

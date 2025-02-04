@@ -10,7 +10,7 @@ MAX_BPS_EXTENDED = 1_000_000_000_000
 def verifier(admin, scrvusd, boracle, soracle):
     with boa.env.prank(admin):
         deployer = boa_solidity.load_partial_solc(
-            "contracts/scrvusd/verifiers/ScrvusdVerifierBasic.sol",
+            "contracts/scrvusd/verifiers/ScrvusdVerifierBasicV2.sol",
             compiler_args={
                 "optimize": True,
                 "optimize_runs": 200,

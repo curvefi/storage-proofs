@@ -22,8 +22,8 @@ abstract contract ScrvusdVerifierCore {
     using RLPReader for RLPReader.RLPItem;
 
     // Common constants
-    address private SCRVUSD;
-    bytes32 private SCRVUSD_HASH;
+    address SCRVUSD;
+    bytes32 SCRVUSD_HASH;
 
     // Storage slots of parameters
     uint256[PROOF_CNT] internal PARAM_SLOTS = [

@@ -6,6 +6,8 @@ implements: IBlockHashOracle
 block_hash: public(HashMap[uint256, bytes32])
 state_root: public(HashMap[uint256, bytes32])
 
+fallback_hash: bytes32
+
 
 @view
 @external
