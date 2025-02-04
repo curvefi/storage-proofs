@@ -23,7 +23,7 @@ def test_by_blockhash(verifier, soracle_period_slots, soracle, boracle, scrvusd,
     verifier.verifyPeriodByBlockHash(block_header_rlp, proofs_rlp)
 
     assert soracle.profit_max_unlock_time() == scrvusd_period
-    assert soracle.block_number() == block_header.block_number
+    assert soracle.last_block_number() == block_header.block_number
 
 
 def test_by_stateroot(verifier, soracle_period_slots, soracle, boracle, scrvusd, scrvusd_period):
@@ -36,4 +36,4 @@ def test_by_stateroot(verifier, soracle_period_slots, soracle, boracle, scrvusd,
     )
 
     assert soracle.profit_max_unlock_time() == scrvusd_period
-    assert soracle.block_number() == block_header.block_number
+    assert soracle.last_block_number() == block_header.block_number
