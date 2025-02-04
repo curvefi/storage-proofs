@@ -62,7 +62,7 @@ The prover needs to be online to provide the proof in a timely manner, if the pr
 ## Contributing
 
 ### Install
-Install python dependencies:
+Install python dependencies using [uv](https://github.com/astral-sh/uv):
 
 ```shell
 uv sync

@@ -13,14 +13,15 @@ dependencies = [
     "web3>=7.0.0",
     "mamushi==0.0.4a3",
     "pytest-xdist>=3.6.1",
+    "py-evm==0.10.1b2",  # Update after `pytest .` check
     # placeholders for git dependencies
     "boa-solidity",
     "titanoboa",
 ]
 
 [tool.uv.sources]
-titanoboa    = { git = "https://github.com/vyperlang/titanoboa.git", rev = "a52c79c67ba0e00ceafc70f9daf730c9a57f27c9" }
-boa-solidity = { git = "https://github.com/z80dev/boa-solidity", rev = "c52d9ec9d665210784ca41b7e73af495a4b799fa" }
+titanoboa    = { git = "https://github.com/vyperlang/titanoboa.git", rev = "19d2a5d7745ac8ed29639257e8d49bfb1bdb366a" }  # Update after `pytest .` check
+boa-solidity = { git = "https://github.com/z80dev/boa-solidity", rev = "3e00649f643ce69108f266942c90bffc717b18b7" }  # Update after `pytest .` check
 
 [tool.ruff]
 line-length = 100
