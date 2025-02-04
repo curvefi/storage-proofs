@@ -15,37 +15,40 @@ def scrvusd_slot_values(scrvusd, crvusd, admin, anne):
         crvusd._mint_for_testing(anne, deposit)
         crvusd.approve(scrvusd, deposit)
         scrvusd.deposit(deposit, anne)
-        # total_idle = deposit
-        # total_supply = deposit
+        # New scrvusd parameters:
+        #   scrvusd.total_idle = deposit,
+        #   scrvusd.total_supply = deposit.
 
     rewards = 10 ** 17
     with boa.env.prank(admin):
         crvusd._mint_for_testing(scrvusd, rewards)
         scrvusd.process_report(scrvusd)
+        # Minted `rewards` shares to scrvusd, because price is still == 1.
 
     boa.env.time_travel(seconds=12, block_delta=12)
-    return [
-        0,  # total_debt, actually doesn't exist
-        deposit + rewards,  # total_idle
-        deposit + rewards,  # total_supply
-        boa.env.evm.patch.timestamp - 12 + WEEK,  # full_profit_unlock_date
-        rewards * MAX_BPS_EXTENDED // WEEK,  # profit_unlocking_rate
-        boa.env.evm.patch.timestamp - 12,  # last_profit_update
-        rewards,  # balance_of_self
-    ]
+    return {
+        "total_debt": 0,  # actually doesn't exist
+        "total_idle": deposit + rewards,
+        "total_supply": deposit + rewards,
+        "full_profit_unlock_date": boa.env.evm.patch.timestamp - 12 + WEEK,
+        "profit_unlocking_rate": rewards * MAX_BPS_EXTENDED // WEEK,
+        "last_profit_update": boa.env.evm.patch.timestamp - 12,
+        "balance_of_self": rewards,
+    }
 
 
 def test_by_blockhash(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
     block_header, proofs = get_block_and_proofs([(scrvusd, soracle_price_slots)])
     boracle._set_block_hash(block_header.block_number, block_header.hash)
 
-    block_header_rlp = rlp.encode(block_header)
-    proofs_rlp = serialize_proofs(proofs[0])
-    verifier.verifyScrvusdByBlockHash(block_header_rlp, proofs_rlp)
+    verifier.verifyScrvusdByBlockHash(
+        rlp.encode(block_header),
+        serialize_proofs(proofs[0]),
+    )
 
-    assert soracle._storage.parameters.get() == scrvusd_slot_values
-    assert soracle.ts() == block_header.timestamp
-    assert soracle.block_number() == block_header.block_number
+    assert soracle._storage.price_params.get() == scrvusd_slot_values
+    assert soracle._storage.price_params_ts.get() == block_header.timestamp
+    assert soracle.last_block_number() == block_header.block_number
 
 
 def test_by_stateroot(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
@@ -57,6 +60,6 @@ def test_by_stateroot(verifier, soracle_price_slots, soracle, boracle, scrvusd, 
         serialize_proofs(proofs[0]),
     )
 
-    assert soracle._storage.parameters.get() == scrvusd_slot_values
-    assert soracle.ts() == scrvusd_slot_values[5]
-    assert soracle.block_number() == block_header.block_number
+    assert soracle._storage.price_params.get() == scrvusd_slot_values
+    assert soracle._storage.price_params_ts.get() == scrvusd_slot_values["last_profit_update"]
+    assert soracle.last_block_number() == block_header.block_number
