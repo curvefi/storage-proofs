@@ -18,8 +18,8 @@ contract ScrvusdVerifierBasicV2 is ScrvusdVerifierBasic {
 
     uint256 internal PERIOD_SLOT = 37; // profit_max_unlock_time
 
-    constructor(address _scrvusd, address _block_hash_oracle, address _scrvusd_oracle)
-        ScrvusdVerifierBasic(_scrvusd, _block_hash_oracle, _scrvusd_oracle) {}
+    constructor(address _block_hash_oracle, address _scrvusd_oracle)
+        ScrvusdVerifierBasic(_block_hash_oracle, _scrvusd_oracle) {}
 
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the period

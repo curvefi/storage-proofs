@@ -17,7 +17,10 @@ def crvusd():
 @pytest.fixture(scope="module")
 def scrvusd(crvusd, admin):
     with boa.env.prank(admin):
-        scrvusd = boa.load("tests/scrvusd/contracts/Vault.vy")
+        scrvusd = boa.load(
+            "tests/scrvusd/contracts/Vault.vy",
+            override_address="0x0655977feb2f289a4ab78af67bab0d17aab84367",
+        )
         scrvusd.initialize(
             crvusd,
             "Savings crvUSD",
