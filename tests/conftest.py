@@ -17,24 +17,24 @@ def pytest_addoption(parser):
         "--forked", action="store_true", default=False, help="Run tests in forked environment"
     )
     parser.addoption(
-        "--stateful", action="store_true", default=False, help="Run stateful tests"
+        "--slow", action="store_true", default=False, help="Run tests marked as slow"
     )
 
 
 def pytest_collection_modifyitems(config, items):
     # Skip tests in `forked/` directories unless --forked is provided
     if not config.getoption("--forked"):
-        skip_forked = pytest.mark.skip(reason="Need --forked option to run")
+        skip_forked = pytest.mark.skip(reason="Skipping forked tests. Use --forked to enable them.")
         for item in items:
             if item.path and "/forked/" in str(item.path):
                 item.add_marker(skip_forked)
 
-    # Skip tests in `stateful/` directories unless --stateful is provided
-    if not config.getoption("--stateful"):
-        skip_forked = pytest.mark.skip(reason="Need --stateful option to run")
+    # Skip slow tests unless --slow is provided
+    if not config.getoption("--slow"):
+        skip_slow = pytest.mark.skip(reason="Skipping slow tests. Use --slow to run them.")
         for item in items:
-            if item.path and "/stateful/" in str(item.path):
-                item.add_marker(skip_forked)
+            if "slow" in item.keywords:
+                item.add_marker(skip_slow)
 
 
 @pytest.fixture(scope="session")
@@ -62,4 +62,4 @@ def admin():
 
 @pytest.fixture(scope="module")
 def boracle():
-    return boa.load("tests/shared/contracts/BlockhashOracleMock.vy", 21369420)
+    return boa.load("tests/shared/contracts/BlockhashOracleMock.vy")

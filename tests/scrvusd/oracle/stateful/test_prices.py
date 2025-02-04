@@ -128,6 +128,7 @@ def max_acceleration(soracle, admin):
     return max_acceleration
 
 
+@pytest.mark.slow
 def test_scrvusd_oracle(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
     run_state_machine_as_test(
         functools.partial(
