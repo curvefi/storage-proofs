@@ -67,7 +67,7 @@ def max_acceleration(soracle, admin, request):
     return request.param
 
 
-def test_scrvusd_oracle(crvusd, scrvusd, admin, max_acceleration, soracle, soracle_slots, verifier):
+def test_scrvusd_oracle(crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier):
     run_state_machine_as_test(
         functools.partial(
             SmootheningStateMachine,
@@ -78,7 +78,7 @@ def test_scrvusd_oracle(crvusd, scrvusd, admin, max_acceleration, soracle, sorac
             # SoracleStateMachine
             soracle=soracle,
             verifier=verifier,
-            soracle_slots=soracle_slots,
+            soracle_slots=soracle_price_slots,
             # Smoothening test
             max_acceleration=max_acceleration,
         ),

@@ -35,9 +35,10 @@ def scrvusd_slot_values(scrvusd, crvusd, admin, anne):
     ]
 
 
-def test_by_blockhash(verifier, soracle_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
-    block_header, proofs = get_block_and_proofs([(scrvusd, soracle_slots)])
+def test_by_blockhash(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
+    block_header, proofs = get_block_and_proofs([(scrvusd, soracle_price_slots)])
     boracle._set_block_hash(block_header.block_number, block_header.hash)
+
     block_header_rlp = rlp.encode(block_header)
     proofs_rlp = serialize_proofs(proofs[0])
     verifier.verifyScrvusdByBlockHash(block_header_rlp, proofs_rlp)
@@ -47,9 +48,10 @@ def test_by_blockhash(verifier, soracle_slots, soracle, boracle, scrvusd, scrvus
     assert soracle.block_number() == block_header.block_number
 
 
-def test_by_stateroot(verifier, soracle_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
-    block_header, proofs = get_block_and_proofs([(scrvusd, soracle_slots)])
+def test_by_stateroot(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
+    block_header, proofs = get_block_and_proofs([(scrvusd, soracle_price_slots)])
     boracle._set_state_root(block_header.block_number, block_header.state_root)
+
     verifier.verifyScrvusdByStateRoot(
         block_header.block_number,
         serialize_proofs(proofs[0]),
