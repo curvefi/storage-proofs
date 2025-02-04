@@ -36,6 +36,9 @@ def pytest_collection_modifyitems(config, items):
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
 
+    # Put integration tests after others
+    items.sort(key=lambda item: [node if node != "integration" else '\uffff' for node in str(item.path).split('/')])
+
 
 @pytest.fixture(scope="session")
 def anne():
