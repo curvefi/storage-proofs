@@ -1,113 +1,86 @@
-import logging
-
 import boa
 
 from trie import HexaryTrie
+from eth.db.hash_trie import HashTrie
+from eth.db.storage import StorageLookup
 import eth_utils
 import eth_abi
 import rlp
 from eth.vm.forks.cancun.blocks import CancunBlockHeader, BlockHeaderAPI
-from eth.constants import BLANK_ROOT_HASH
 from eth.db.journal import DELETE_WRAPPED, REVERT_TO_WRAPPED
 from eth.rlp.accounts import Account
 from typing import cast
-
-
-REVERT_MESSAGE = "Revert updating parameters to storage"
+from trie.utils.db import ScratchDB
 
 
 def _update_without_persist(account_db, query):
+    # Currently boa never flushes caches(`.persist()`) to have all snapshots available,
+    # so db and _trie are actually empty.
+    # Though, saving reference in case of future changes.
+    write_batch = ScratchDB(account_db._raw_store_db.wrapped_db)
+    memory_trie = HashTrie(HexaryTrie(write_batch, account_db._trie.root_hash, prune=True))
+
+    # Skipping existing account_db._journaltrie.diff() because currently empty.
+
     for _address, store in account_db._dirty_account_stores():
-        store.make_storage_root()
+        storage_lookup = StorageLookup(write_batch, store._storage_lookup._starting_root_hash, _address)
+        journal_data = store._journal_storage._journal._current_values
 
-    for address, storage_root in account_db._get_changed_roots():
-        if account_db.account_exists(address) or storage_root != BLANK_ROOT_HASH:
-            account_db.logger.debug2(
-                f"Updating account 0x{address.hex()} to storage root "
-                f"0x{storage_root.hex()}",
-            )
-            account_db._set_storage_root(address, storage_root)
-
-    journal_db = account_db._journaldb
-    journal_data = journal_db._journal._current_values
-    for key, value in journal_data.items():
-        try:
+        for key, value in journal_data.items():
             if value is DELETE_WRAPPED:
-                del journal_db._wrapped_db[key]
+                del storage_lookup[key]
             elif value is REVERT_TO_WRAPPED:
                 pass
             else:
-                journal_db._wrapped_db[key] = cast(bytes, value)
-        except Exception:
-            journal_db._reapply_checkpoint_to_journal(journal_data)
-            raise
+                storage_lookup[key] = cast(bytes, value)
 
-    new_state_root = None
-    diff = account_db._journaltrie.diff()
+        if storage_lookup.has_changed_root:
+            # Update account
+            account = account_db._get_account(_address)
+            rlp_account = rlp.encode(account.copy(storage_root=storage_lookup.get_changed_root()), sedes=Account)
+            memory_trie[_address] = rlp_account
 
-    # In addition to squashing (which is redundant here), this context manager
-    # causes an atomic commit of the changes, so exceptions will revert the trie
-    logger = logging.getLogger("eth.db.AtomicDBWriteBatch")
-    logger_was_disabled = logger.disabled
-    try:
-        # First apply account changes
-        with account_db._trie.squash_changes() as memory_trie:
-            account_db._apply_account_diff_without_proof(diff, memory_trie)
+            # Update storage slots
+            diff = storage_lookup._trie_nodes_batch.diff()
+            diff.apply_to(write_batch, True)
 
-            # Apply storage changes
-            with account_db._raw_store_db.atomic_batch() as write_batch:
-                for address, store in account_db._dirty_account_stores():
-                    account_db._validate_flushed_storage(address, store)
-                    # store.persist(write_batch)
-                    if store._storage_lookup.has_changed_root:
-                        # store._storage_lookup.commit_to(write_batch)
-                        diff = store._storage_lookup._trie_nodes_batch.diff()
-                        diff.apply_to(write_batch, True)
+    new_state_root = memory_trie.root_hash
 
-                # Save resulted state root
-                new_state_root = memory_trie.root_hash
+    result = []
+    for addr, slots in query:
+        if hasattr(addr, "address"):  # is of type VyperContract
+            addr = addr.address
 
-                result = []
-                for addr, slots in query:
-                    if hasattr(addr, "address"):  # is of type VyperContract
-                        addr = addr.address
+        # Get account proof
+        address_bytes = bytes.fromhex(addr[2:])  # remove "0x"
+        address_hash = eth_utils.keccak(address_bytes)
+        account_proof = [rlp.encode(node) for node in memory_trie.get_proof(address_hash)]
 
-                    # Get account proof
-                    address_bytes = bytes.fromhex(addr[2:])  # remove "0x"
-                    address_hash = eth_utils.keccak(address_bytes)
-                    account_proof = [rlp.encode(node) for node in memory_trie.get_proof(address_hash)]
+        # Get storage proofs
+        account = rlp.decode(memory_trie[address_bytes], sedes=Account)
+        storage_trie = HexaryTrie(
+            write_batch,
+            account.storage_root,
+        )
 
-                    # Get storage proofs
-                    account = rlp.decode(memory_trie.get(address_bytes), sedes=Account)
-                    storage_trie = HexaryTrie(
-                        write_batch,
-                        account.storage_root,
-                    )
-
-                    storage_proof = []
-                    for slot in slots:
-                        slot_hash = eth_utils.keccak(eth_abi.encode(["uint256"], [slot]))  # Correctly hash the slot
-                        slot_proof_nodes = storage_trie.get_proof(slot_hash)
-                        storage_proof.append({
-                            "key": slot,
-                            "value": storage_trie.get(slot_hash),
-                            "proof": [rlp.encode(node) for node in slot_proof_nodes],
-                        })
-                    result.append({
-                        "address": addr,
-                        "accountProof": account_proof,
-                        "balance": account.balance,
-                        "codeHash": account.code_hash,
-                        "nonce": account.nonce,
-                        "storageHash": account.storage_root,
-                        "storageProof": storage_proof,
-                    })
-                logger.disabled = True
-                raise Exception(REVERT_MESSAGE)
-    except Exception as e:
-        logger.disabled = logger_was_disabled
-        assert str(e) == REVERT_MESSAGE
-        pass
+        storage_proof = []
+        for slot in slots:
+            slot_hash = eth_utils.keccak(eth_abi.encode(["uint256"], [slot]))
+            slot_proof_nodes = storage_trie.get_proof(slot_hash)
+            storage_proof.append({
+                "key": slot,
+                "value": storage_trie.get(slot_hash),
+                "proof": [rlp.encode(node) for node in slot_proof_nodes],
+            })
+        result.append({
+            "address": addr,
+            "accountProof": account_proof,
+            "balance": account.balance,
+            "codeHash": account.code_hash,
+            "nonce": account.nonce,
+            "storageHash": account.storage_root,
+            "storageProof": storage_proof,
+        })
     return new_state_root, result
 
 
