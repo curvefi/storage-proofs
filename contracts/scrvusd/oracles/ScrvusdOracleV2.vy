@@ -150,6 +150,7 @@ def raw_price(_i: uint256=0, _ts: uint256=block.timestamp, _parameters_ts: uint2
 
 @view
 def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
+    # Ideally should be (max_acceleration / 10**18) ** (block.timestamp - self.last_update)
     max_change: uint256 = self.max_acceleration * (block.timestamp - self.last_update) * last_price // 10 ** 18
     # -max_change <= (raw_price - last_price) <= max_change
     if unsafe_sub(raw_price + max_change, last_price) > 2 * max_change:
@@ -159,7 +160,7 @@ def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
 
 @view
 def _price_v0() -> uint256:
-    return self._smoothed_price(self.last_prices[0], self._raw_price(self.price_params_ts, self.price_params_ts))
+    return self._smoothed_price(self.last_prices[0], self._raw_price(self.price_params_ts, self.price_params.last_profit_update))
 
 
 @view
@@ -223,7 +224,7 @@ def _total_assets(p: PriceParams) -> uint256:
 def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
     """
     @notice Obtain Price parameters true or assumed to be true at `parameters_ts`.
-        Assumes constant gain(crvUSD rewards) through distribution periods.
+        Assumes constant gain(in crvUSD rewards) through distribution periods.
     @param parameters_ts Timestamp to obtain parameters for
     @return Assumed `PriceParams`
     """
@@ -232,20 +233,24 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
         return params
 
     period: uint256 = self.profit_max_unlock_time
-    max_periods: uint256 = self.max_v2_duration
-    number_of_periods: uint256 = min((parameters_ts - params.full_profit_unlock_date) // period + 1, max_periods)
+    number_of_periods: uint256 = min(
+        (parameters_ts - params.full_profit_unlock_date) // period + 1,
+        self.max_v2_duration,
+    )
 
     # locked shares at moment params.last_profit_update
     gain: uint256 = params.balance_of_self * (params.total_idle + params.total_debt) // params.total_supply
 
-    for i: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
-        params.balance_of_self = params.balance_of_self * (params.total_supply - params.balance_of_self) // params.total_supply
+    for _: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
+        new_balance_of_self: uint256 = params.balance_of_self * (params.total_supply - params.balance_of_self) // params.total_supply
         params.total_idle += gain
         params.total_supply -= params.balance_of_self * params.balance_of_self // params.total_supply
+        params.balance_of_self = new_balance_of_self
 
     params.full_profit_unlock_date += number_of_periods * period
     params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // period
     params.last_profit_update += number_of_periods * period
+
     return params
 
 
