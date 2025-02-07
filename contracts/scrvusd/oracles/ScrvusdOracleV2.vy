@@ -234,7 +234,7 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
 
     period: uint256 = self.profit_max_unlock_time
     number_of_periods: uint256 = min(
-        (parameters_ts - params.full_profit_unlock_date) // period + 1,
+        (parameters_ts - params.last_profit_update) // period,
         self.max_v2_duration,
     )
 
@@ -247,8 +247,11 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
         params.total_supply -= params.balance_of_self * params.balance_of_self // params.total_supply
         params.balance_of_self = new_balance_of_self
 
+    if params.full_profit_unlock_date > params.last_profit_update:
+        params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // (params.full_profit_unlock_date - params.last_profit_update)
+    else:
+        params.profit_unlocking_rate = 0
     params.full_profit_unlock_date += number_of_periods * period
-    params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // period
     params.last_profit_update += number_of_periods * period
 
     return params
