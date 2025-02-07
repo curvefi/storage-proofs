@@ -41,7 +41,7 @@ class SoracleTestStateMachine(SoracleStateMachine):
     #     max_size=5,
     # ).map(sorted)
 
-    st_week_timestamps = [1, 60, 3600, 86400]
+    st_week_timestamps = [1, 60, 3600, 86400, 4 * 86400]
     st_iterate_over_week = [x[1] - x[0] for x in zip([0] + st_week_timestamps, st_week_timestamps + [7 * 86400])]
 
     st_time_delays = [1, 86400, 3600, 30 * 86400, 60]
@@ -128,26 +128,35 @@ class SoracleTestStateMachine(SoracleStateMachine):
                     boa.env.time_travel(seconds=7 * 86400)
                 self.add_rewards(amount)
 
-        # # Simulate same total amount, but approximate price value
-        # with boa.env.anchor():
-        #     amounts = [amount // 2, amount // 3]
-        #     amounts.append(amount - sum(amounts))
-        #     week_checkpoints = [0, 3 * 86400, 5 * 86400, 7 * 86400]
-        #     sim_start = boa.env.evm.patch.timestamp
-        #
-        #     for i in range(max(self.st_weeks)):
-        #         j = 0
-        #         if i in self.st_weeks:
-        #             for ts_delta in self.st_iterate_over_week:
-        #                 boa.env.time_travel(seconds=ts_delta)
-        #                 if (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[j]:
-        #                     self.add_rewards(amounts[j])
-        #                     j += 1
-        #                 assert self.soracle.price_v2() == pytest.approx(self.price(), rel=1e-15)  # computation errors
-        #         while j < len(amounts):
-        #             self.add_rewards(amounts[j])
-        #             boa.env.time_travel(seconds=week_checkpoints[j + 1] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
-        #             self.add_rewards(amounts[j])
+        # Simulate same total amount, but approximate price value
+        with boa.env.anchor():
+            amounts = [amount // 2, amount // 3]
+            amounts.append(amount - sum(amounts))
+            week_checkpoints = [0, 86400, 4 * 86400, 7 * 86400]
+            sim_start = boa.env.evm.patch.timestamp
+
+            # Last week
+            price_change = self.price()
+            for j in range(len(amounts)):
+                self.add_rewards(amounts[j])
+                j += 1
+                boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
+            price_change = self.price() / price_change
+            self.update_price()
+
+            for i in range(max(self.st_weeks)):
+                j = 0
+                if i in self.st_weeks:
+                    for ts_delta in self.st_iterate_over_week:
+                        boa.env.time_travel(seconds=ts_delta)
+                        while (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[j]:
+                            self.add_rewards(amounts[j])
+                            j += 1
+                        assert self.soracle.price_v2() == pytest.approx(self.price(), rel=price_change)
+                while j < len(amounts):
+                    self.add_rewards(amounts[j])
+                    j += 1
+                    boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -190,7 +199,8 @@ def test_price_simple(crvusd, scrvusd, admin, soracle, soracle_price_slots, veri
     machine._price_v2(333 * 10 ** 18)
 
 
-def test_extra(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
+def test_period_not_full(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
+    # full_profit_unlock_date can be < last_profit_update + profit_max_unlock_time
     state = SoracleTestStateMachine(
         # ScrvusdStateMachine
         crvusd=crvusd,
@@ -201,10 +211,8 @@ def test_extra(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
         verifier=verifier,
         soracle_slots=soracle_price_slots,
     )
-    state.wait(time_delta=362881)
-    # state.add_rewards(amount=1)
     state.update_price()
-    state._price_v2(1)
+    state._price_v2(2)
 
 
 @pytest.mark.slow
