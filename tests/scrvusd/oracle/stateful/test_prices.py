@@ -5,6 +5,7 @@ import boa
 from hypothesis import settings
 from hypothesis import strategies as st
 from hypothesis.stateful import invariant, run_state_machine_as_test, given
+from tests.conftest import WEEK
 
 from tests.scrvusd.oracle.stateful.crvusd_state_machine import SoracleStateMachine
 import pytest
@@ -15,17 +16,36 @@ class SoracleTestStateMachine(SoracleStateMachine):
     State Machine to test different oracle price versions behaviour.
     """
 
-    st_week_timestamps = st.lists(
-        st.integers(min_value=1, max_value=7 * 86400),
-        unique=True,
-        min_size=5,  # making time
-        max_size=5,
-    ).map(sorted)
-    st_iterate_over_week = st_week_timestamps.map(
-        lambda lst: list(map(lambda x: x[1] - x[0], zip([0] + lst, lst + [7 * 86400])))
-    )  # generates ts_delta
+    # Tests become extremely slow (~7 min for test_price_simple)
+    # Tried to use as:
+    # @given(data=st.data())
+    # def ...
+    #       ...data.draw(self.st_time_delay)...
+    #
+    # st_week_timestamps = st.lists(
+    #     st.integers(min_value=0, max_value=7 * 86400 - 1),
+    #     unique=True,
+    #     min_size=5,  # making execution time more determined
+    #     max_size=5,
+    # ).map(sorted)
+    # st_iterate_over_week = st_week_timestamps.map(
+    #     lambda lst: list(map(lambda x: x[1] - x[0], zip([0] + lst, lst + [7 * 86400])))
+    # )  # generates ts_delta
+    #
+    # st_time_delay = st.integers(min_value=1, max_value=30 * 86400)
+    #
+    # st_weeks = st.lists(
+    #     st.integers(min_value=1, max_value=4 * 3),
+    #     unique=True,
+    #     min_size=5,  # making execution time more determined
+    #     max_size=5,
+    # ).map(sorted)
 
-    st_time_delay = st.integers(min_value=1, max_value=30 * 86400)
+    st_week_timestamps = [1, 60, 3600, 86400]
+    st_iterate_over_week = [x[1] - x[0] for x in zip([0] + st_week_timestamps, st_week_timestamps + [7 * 86400])]
+
+    st_time_delays = [1, 86400, 3600, 30 * 86400, 60]
+    st_weeks = [0, 1, 2, 5, 10, 12]
 
     def __init__(self, crvusd, scrvusd, admin, soracle, verifier, soracle_slots):
         super().__init__(crvusd, scrvusd, admin, soracle, verifier, soracle_slots)
@@ -63,8 +83,7 @@ class SoracleTestStateMachine(SoracleStateMachine):
             assert self.soracle.price_v0() == price
 
     @invariant()
-    @given(data=st.data())
-    def price_v1(self, data):
+    def price_v1(self):
         """
         Test that v1 replicates the price function with no further updates of scrvUSD.
 
@@ -75,45 +94,60 @@ class SoracleTestStateMachine(SoracleStateMachine):
             self.update_price()
 
             # Check following week
-            for ts_delta in data.draw(self.st_iterate_over_week):
+            for ts_delta in self.st_iterate_over_week:
                 boa.env.time_travel(seconds=ts_delta)
                 assert self.soracle.price_v1() == self.price()
             # Check random 10 timestamps after
-            for _ in range(10):
-                boa.env.time_travel(seconds=data.draw(self.st_time_delay))
+            for delay in self.st_time_delays:
+                boa.env.time_travel(seconds=delay)
                 assert self.soracle.price_v1() == self.price()
 
-    # @invariant()
-    # @given(amount=st.integers(min_value=0, max_value=10 ** 9 * 10 ** 18))
-    # @given(data=st.data())
-    # def price_v2(self, data, amount):
-    #     """
-    #     Test that v2 assumes same reward amount coming every week
-    #     :param amount: Amount of rewards (in crvUSD) being distributed every week
-    #     """
-    #     # Check literally rewarding same amount at the start of every week
-    #     with boa.env.anchor():
-    #         # Forget about previous rewards
-    #         boa.env.time_travel(seconds=7 * 86400)
-    #         self.add_rewards(amount)
-    #         self.process_rewards()
-    #         self.update_price()
-    #
-    #         weeks_to_check = data.draw(self.st_weeks)
-    #         for i in range(max(*weeks_to_check)):
-    #             self.add_rewards(amount)
-    #             self.process_rewards()
-    #
-    #             if i in weeks_to_check:
-    #                 for ts_delta in data.draw(self.st_iterate_over_week):
-    #                     boa.env.time_travel(seconds=ts_delta)
-    #                     assert self.soracle.price_v2() == self.price()
-    #             else:
-    #                 boa.env.time_travel(seconds=7 * 86400)
-    #
-    #     # Simulate same total amount, but approximate price value
-    #     with boa.env.anchor():
-    #         pass
+    @invariant()
+    @given(amount=st.integers(min_value=0, max_value=10 ** 9 * 10 ** 18))
+    def price_v2(self, amount):
+        self._price_v2(amount)
+
+    def _price_v2(self, amount):
+        """
+        Test that v2 assumes same reward amount coming every week
+        :param amount: Amount of rewards (in crvUSD) being distributed every week
+        """
+        # Check literally rewarding same amount at the start of every week
+        with boa.env.anchor():
+            # Forget about previous rewards
+            boa.env.time_travel(seconds=7 * 86400)
+            self.add_rewards(amount)
+            self.update_price()
+
+            for i in range(max(self.st_weeks)):
+                if i in self.st_weeks:
+                    for ts_delta in self.st_iterate_over_week:
+                        boa.env.time_travel(seconds=ts_delta)
+                        assert self.soracle.price_v2() == pytest.approx(self.price(), rel=1e-15)  # computation errors
+                else:
+                    boa.env.time_travel(seconds=7 * 86400)
+                self.add_rewards(amount)
+
+        # # Simulate same total amount, but approximate price value
+        # with boa.env.anchor():
+        #     amounts = [amount // 2, amount // 3]
+        #     amounts.append(amount - sum(amounts))
+        #     week_checkpoints = [0, 3 * 86400, 5 * 86400, 7 * 86400]
+        #     sim_start = boa.env.evm.patch.timestamp
+        #
+        #     for i in range(max(self.st_weeks)):
+        #         j = 0
+        #         if i in self.st_weeks:
+        #             for ts_delta in self.st_iterate_over_week:
+        #                 boa.env.time_travel(seconds=ts_delta)
+        #                 if (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[j]:
+        #                     self.add_rewards(amounts[j])
+        #                     j += 1
+        #                 assert self.soracle.price_v2() == pytest.approx(self.price(), rel=1e-15)  # computation errors
+        #         while j < len(amounts):
+        #             self.add_rewards(amounts[j])
+        #             boa.env.time_travel(seconds=week_checkpoints[j + 1] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
+        #             self.add_rewards(amounts[j])
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -126,6 +160,51 @@ def max_acceleration(soracle, admin):
     max_acceleration = 2 ** 128 - 1
     soracle.eval(f"self.max_acceleration = {max_acceleration}")
     return max_acceleration
+
+
+def test_price_simple(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
+    machine = SoracleTestStateMachine(
+        # ScrvusdStateMachine
+        crvusd=crvusd,
+        scrvusd=scrvusd,
+        admin=admin,
+        # SoracleStateMachine
+        soracle=soracle,
+        verifier=verifier,
+        soracle_slots=soracle_price_slots,
+    )
+    machine.price_v0()
+    machine.price_v1()
+    machine._price_v2(333 * 10 ** 18)
+
+    machine.user_changes(4444 * 10 ** 18)
+    machine.wait(3600)
+    machine.price_v0()
+    machine.price_v1()
+    machine._price_v2(333 * 10 ** 18)
+
+    machine.add_rewards(22 * 10 ** 18)
+    machine.wait(1800)
+    machine.price_v0()
+    machine.price_v1()
+    machine._price_v2(333 * 10 ** 18)
+
+
+def test_extra(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
+    state = SoracleTestStateMachine(
+        # ScrvusdStateMachine
+        crvusd=crvusd,
+        scrvusd=scrvusd,
+        admin=admin,
+        # SoracleStateMachine
+        soracle=soracle,
+        verifier=verifier,
+        soracle_slots=soracle_price_slots,
+    )
+    state.wait(time_delta=362881)
+    # state.add_rewards(amount=1)
+    state.update_price()
+    state._price_v2(1)
 
 
 @pytest.mark.slow

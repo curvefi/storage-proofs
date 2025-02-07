@@ -33,8 +33,7 @@ class ScrvusdStateMachine(RuleBasedStateMachine):
         self.crvusd._mint_for_testing(self.user, 10 ** (18 * 3))
         self.crvusd.approve(self.scrvusd, 2 ** 256 - 1)
         self.scrvusd.deposit(10**18, self.user)
-        self.crvusd._mint_for_testing(self.scrvusd, 10 ** (18 - 3))
-        self.process_rewards()
+        self.add_rewards(10 ** (18 - 3))
 
     def price(self):
         """
@@ -56,19 +55,14 @@ class ScrvusdStateMachine(RuleBasedStateMachine):
         elif diff < 0:
             self.scrvusd.redeem(-diff, self.user, self.user)
 
-    @rule(amount=st.integers(min_value=0, max_value=10 ** 9 * 10 ** 18))
+    @rule(amount=st.integers(min_value=1, max_value=10 ** 9 * 10 ** 18))
     def add_rewards(self, amount):
         """
-        Adding rewards like from FeeSplitter. Need to trigger `process_rewards` for streaming.
+        Adding rewards like from FeeSplitter.
         :param amount: Amount in crvUSD.
         """
         self.crvusd._mint_for_testing(self.scrvusd, amount)
-
-    @rule()
-    def process_rewards(self):
-        """
-        Start streaming added rewards at `add_rewards`.
-        """
+        # Since sending crvUSD does not alter scrvUSD contract's storage we can call both functions at once
         with boa.env.prank(self.admin):
             self.scrvusd.process_report(self.scrvusd.address)
 
