@@ -240,10 +240,10 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
 
     # locked shares at moment params.last_profit_update
     gain: uint256 = params.balance_of_self * (params.total_idle + params.total_debt) // params.total_supply
+    params.total_idle += gain * number_of_periods
 
     for _: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
         new_balance_of_self: uint256 = params.balance_of_self * (params.total_supply - params.balance_of_self) // params.total_supply
-        params.total_idle += gain
         params.total_supply -= params.balance_of_self * params.balance_of_self // params.total_supply
         params.balance_of_self = new_balance_of_self
 
