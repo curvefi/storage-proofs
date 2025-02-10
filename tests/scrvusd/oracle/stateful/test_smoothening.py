@@ -55,7 +55,6 @@ class SmootheningStateMachine(SoracleStateMachine):
             with boa.env.anchor():
                 prev_price, prev_ts = get_soracle_price(), boa.env.evm.patch.timestamp
                 for ts_delta in self.st_iterate_over_period:
-                    print(get_soracle_price)
                     boa.env.time_travel(seconds=ts_delta)
                     new_price, new_ts = get_soracle_price(), boa.env.evm.patch.timestamp
 

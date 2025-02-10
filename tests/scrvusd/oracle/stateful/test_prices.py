@@ -136,27 +136,34 @@ class SoracleTestStateMachine(SoracleStateMachine):
             sim_start = boa.env.evm.patch.timestamp
 
             # Last week
-            price_change = self.price()
+            price_change = self._get_final_price()
             for j in range(len(amounts)):
                 self.add_rewards(amounts[j])
                 j += 1
                 boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
-            price_change = self.price() / price_change
+            price_change = self._get_final_price() / price_change
             self.update_price()
+            self.soracle.price_v2()
 
             for i in range(max(self.st_weeks)):
                 j = 0
                 if i in self.st_weeks:
                     for ts_delta in self.st_iterate_over_week:
-                        boa.env.time_travel(seconds=ts_delta)
                         while (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[j]:
                             self.add_rewards(amounts[j])
                             j += 1
+                        boa.env.time_travel(seconds=ts_delta)
                         assert self.soracle.price_v2() == pytest.approx(self.price(), rel=price_change)
                 while j < len(amounts):
                     self.add_rewards(amounts[j])
                     j += 1
                     boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
+
+    def _get_final_price(self):
+        total_idle = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[1])
+        total_supply = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[2])
+        balance_of_self = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[6])
+        return total_idle * 10 ** 18 // (total_supply - balance_of_self)
 
 
 @pytest.fixture(scope="module", autouse=True)

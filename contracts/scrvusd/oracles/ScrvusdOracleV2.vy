@@ -229,10 +229,10 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
     @return Assumed `PriceParams`
     """
     params: PriceParams = self.price_params
-    if params.full_profit_unlock_date >= parameters_ts:
+    period: uint256 = self.profit_max_unlock_time
+    if params.last_profit_update + period >= parameters_ts:
         return params
 
-    period: uint256 = self.profit_max_unlock_time
     number_of_periods: uint256 = min(
         (parameters_ts - params.last_profit_update) // period,
         self.max_v2_duration,
