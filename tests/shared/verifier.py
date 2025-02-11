@@ -23,7 +23,9 @@ def _update_without_persist(account_db, query):
     # Skipping existing account_db._journaltrie.diff() because currently empty.
 
     for _address, store in account_db._dirty_account_stores():
-        storage_lookup = StorageLookup(write_batch, store._storage_lookup._starting_root_hash, _address)
+        storage_lookup = StorageLookup(
+            write_batch, store._storage_lookup._starting_root_hash, _address
+        )
         journal_data = store._journal_storage._journal._current_values
 
         for key, value in journal_data.items():
@@ -37,7 +39,9 @@ def _update_without_persist(account_db, query):
         if storage_lookup.has_changed_root:
             # Update account
             account = account_db._get_account(_address)
-            rlp_account = rlp.encode(account.copy(storage_root=storage_lookup.get_changed_root()), sedes=Account)
+            rlp_account = rlp.encode(
+                account.copy(storage_root=storage_lookup.get_changed_root()), sedes=Account
+            )
             memory_trie[_address] = rlp_account
 
             # Update storage slots
@@ -67,20 +71,24 @@ def _update_without_persist(account_db, query):
         for slot in slots:
             slot_hash = eth_utils.keccak(eth_abi.encode(["uint256"], [slot]))
             slot_proof_nodes = storage_trie.get_proof(slot_hash)
-            storage_proof.append({
-                "key": slot,
-                "value": storage_trie.get(slot_hash),
-                "proof": [rlp.encode(node) for node in slot_proof_nodes],
-            })
-        result.append({
-            "address": addr,
-            "accountProof": account_proof,
-            "balance": account.balance,
-            "codeHash": account.code_hash,
-            "nonce": account.nonce,
-            "storageHash": account.storage_root,
-            "storageProof": storage_proof,
-        })
+            storage_proof.append(
+                {
+                    "key": slot,
+                    "value": storage_trie.get(slot_hash),
+                    "proof": [rlp.encode(node) for node in slot_proof_nodes],
+                }
+            )
+        result.append(
+            {
+                "address": addr,
+                "accountProof": account_proof,
+                "balance": account.balance,
+                "codeHash": account.code_hash,
+                "nonce": account.nonce,
+                "storageHash": account.storage_root,
+                "storageProof": storage_proof,
+            }
+        )
     return new_state_root, result
 
 
@@ -109,7 +117,7 @@ def get_block_and_proofs(query: list) -> (BlockHeaderAPI, list):
         state_root=state_root,
         bloom=parent_header.bloom,
         gas_used=0,  # No transactions in this block
-        nonce=b'\x00\x00\x00\x00\x00\x00\x00\x00',
+        nonce=b"\x00\x00\x00\x00\x00\x00\x00\x00",
         base_fee_per_gas=1000000000,
     )
     return block_header, proofs

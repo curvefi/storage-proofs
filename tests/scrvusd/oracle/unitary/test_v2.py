@@ -2,13 +2,13 @@ import pytest
 import boa
 
 from tests.scrvusd.conftest import DEFAULT_MAX_ACCELERATION, DEFAULT_MAX_V2_DURATION
-from tests.scrvusd.oracle.unitary.test_v1 import test_update_price  # noqa: reusing test
+from tests.scrvusd.oracle.unitary.test_v1 import test_update_price  # noqa: F401  # reusing test
 
 
 @pytest.fixture(scope="module")
 def soracle(admin):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10 ** 18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10**18)
     return contract
 
 

@@ -7,7 +7,7 @@ from tests.scrvusd.conftest import DEFAULT_MAX_ACCELERATION
 @pytest.fixture(scope="module")
 def soracle(admin):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", 10 ** 18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", 10**18)
     return contract
 
 

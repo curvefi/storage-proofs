@@ -16,9 +16,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--forked", action="store_true", default=False, help="Run tests in forked environment"
     )
-    parser.addoption(
-        "--slow", action="store_true", default=False, help="Run tests marked as slow"
-    )
+    parser.addoption("--slow", action="store_true", default=False, help="Run tests marked as slow")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -37,7 +35,11 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_slow)
 
     # Put integration tests after others
-    items.sort(key=lambda item: [node if node != "integration" else '\uffff' for node in str(item.path).split('/')])
+    items.sort(
+        key=lambda item: [
+            node if node != "integration" else "\uffff" for node in str(item.path).split("/")
+        ]
+    )
 
 
 @pytest.fixture(scope="session")

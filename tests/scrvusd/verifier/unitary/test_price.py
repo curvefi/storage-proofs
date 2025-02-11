@@ -10,7 +10,7 @@ from tests.shared.verifier import get_block_and_proofs
 
 @pytest.fixture(scope="module")
 def scrvusd_slot_values(scrvusd, crvusd, admin, anne):
-    deposit = 10 ** 18
+    deposit = 10**18
     with boa.env.prank(anne):
         crvusd._mint_for_testing(anne, deposit)
         crvusd.approve(scrvusd, deposit)
@@ -19,7 +19,7 @@ def scrvusd_slot_values(scrvusd, crvusd, admin, anne):
         #   scrvusd.total_idle = deposit,
         #   scrvusd.total_supply = deposit.
 
-    rewards = 10 ** 17
+    rewards = 10**17
     with boa.env.prank(admin):
         crvusd._mint_for_testing(scrvusd, rewards)
         scrvusd.process_report(scrvusd)
@@ -37,7 +37,9 @@ def scrvusd_slot_values(scrvusd, crvusd, admin, anne):
     }
 
 
-def test_by_blockhash(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
+def test_by_blockhash(
+    verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values
+):
     block_header, proofs = get_block_and_proofs([(scrvusd, soracle_price_slots)])
     boracle._set_block_hash(block_header.block_number, block_header.hash)
 
@@ -51,7 +53,9 @@ def test_by_blockhash(verifier, soracle_price_slots, soracle, boracle, scrvusd, 
     assert soracle.last_block_number() == block_header.block_number
 
 
-def test_by_stateroot(verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values):
+def test_by_stateroot(
+    verifier, soracle_price_slots, soracle, boracle, scrvusd, scrvusd_slot_values
+):
     block_header, proofs = get_block_and_proofs([(scrvusd, soracle_price_slots)])
     boracle._set_state_root(block_header.block_number, block_header.state_root)
 

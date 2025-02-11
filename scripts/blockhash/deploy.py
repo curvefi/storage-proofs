@@ -8,9 +8,7 @@ from getpass import getpass
 from eth_account import account
 
 
-NETWORK = (
-    f"https://rpc.soniclabs.com"
-)
+NETWORK = f"https://rpc.soniclabs.com"  # noqa: F541
 
 eth_web3 = Web3(
     provider=Web3.HTTPProvider(
@@ -66,18 +64,14 @@ def apply_state_root(boracle):
 
 
 def find_block_hash(boracle):
-    number = boracle.find_known_block_number(
-        eth_web3.eth.get_block("latest")
-    )
+    number = boracle.find_known_block_number(eth_web3.eth.get_block("latest"))
     blockhash = boracle.get_block_hash(number)
     print(f"Found block: {number}, {blockhash.hex()}")
     assert blockhash == eth_web3.eth.get_block(number)["hash"]
 
 
 def find_state_root(boracle):
-    number = boracle.find_known_block_number(
-        eth_web3.eth.get_block("latest")
-    )
+    number = boracle.find_known_block_number(eth_web3.eth.get_block("latest"))
     stateroot = boracle.get_state_root(number)
     print(f"Found block: {number}, {stateroot.hex()}")
     assert stateroot == eth_web3.eth.get_block(number)["stateRoot"]
