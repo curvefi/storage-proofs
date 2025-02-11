@@ -14,6 +14,7 @@ CHAIN_ID = CHAIN_IDS[CHAIN]
 
 VERIFIER = {
     "bsc": "0x74d6aABD6197E83d963F0B48be9C034F93E8E66d",
+    "sonic": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1",
 }[CHAIN]
 VERSION = {
     "bsc": "blockhash",
