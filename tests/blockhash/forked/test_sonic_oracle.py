@@ -15,7 +15,9 @@ def set_network(forked_rpc):
 
 @pytest.fixture(scope="module")
 def boracle(set_network):
-    return boa.load("contracts/blockhash/SonicBlockHashOracle.vy", "0x836664B0c0CB29B7877bCcF94159CC996528F2C3")
+    return boa.load(
+        "contracts/blockhash/SonicBlockHashOracle.vy", "0x836664B0c0CB29B7877bCcF94159CC996528F2C3"
+    )
 
 
 @pytest.mark.parametrize("operation", ["commit", "apply"])
@@ -25,8 +27,9 @@ def test_update(boracle, anne, operation):
 
     stateroot = boracle.get_state_root(number)
     assert stateroot != EMPTY_BYTES32, "StateRoot not set"
-    assert boracle.commitments(anne, number) == stateroot if operation == "commit" else EMPTY_BYTES32, \
-        "Commitment not registered"
+    assert (
+        boracle.commitments(anne, number) == stateroot if operation == "commit" else EMPTY_BYTES32
+    ), "Commitment not registered"
     assert boracle.find_known_block_number() == number, "Could not find new block"
     assert boracle.find_known_block_number(number) == number, "Could not find new block"
     assert boracle.find_known_block_number(number + 10) == number, "Could not find new block"

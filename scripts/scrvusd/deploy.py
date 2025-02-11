@@ -58,7 +58,7 @@ def prove(boracle, soracle, verifier):
 
     proofs = generate_proof(eth_web3, number, log=True)
     submit_proof(proofs, verifier)
-    print(f"Sibmitted proof")
+    print("Sibmitted proof")
 
 
 def simulate(boracle, soracle, verifier):

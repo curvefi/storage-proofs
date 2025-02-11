@@ -1,5 +1,4 @@
 import functools
-from datetime import timedelta
 
 import boa
 from hypothesis import settings
@@ -42,7 +41,9 @@ class SoracleTestStateMachine(SoracleStateMachine):
     # ).map(sorted)
 
     st_week_timestamps = [1, 60, 3600, 86400, 4 * 86400]
-    st_iterate_over_week = [x[1] - x[0] for x in zip([0] + st_week_timestamps, st_week_timestamps + [7 * 86400])]
+    st_iterate_over_week = [
+        x[1] - x[0] for x in zip([0] + st_week_timestamps, st_week_timestamps + [7 * 86400])
+    ]
 
     st_time_delays = [1, 86400, 3600, 30 * 86400, 60]
     st_weeks = [0, 1, 2, 5, 10, 12]
@@ -103,7 +104,7 @@ class SoracleTestStateMachine(SoracleStateMachine):
                 assert self.soracle.price_v1() == self.price()
 
     @invariant()
-    @given(amount=st.integers(min_value=0, max_value=10 ** 9 * 10 ** 18))
+    @given(amount=st.integers(min_value=0, max_value=10**9 * 10**18))
     def price_v2(self, amount):
         self._price_v2(amount)
 
@@ -123,7 +124,9 @@ class SoracleTestStateMachine(SoracleStateMachine):
                 if i in self.st_weeks:
                     for ts_delta in self.st_iterate_over_week:
                         boa.env.time_travel(seconds=ts_delta)
-                        assert self.soracle.price_v2() == pytest.approx(self.price(), rel=1e-12)  # computation errors
+                        assert self.soracle.price_v2() == pytest.approx(
+                            self.price(), rel=1e-12
+                        )  # computation errors
                 else:
                     boa.env.time_travel(seconds=7 * 86400)
                 self.add_rewards(amount)
@@ -140,7 +143,9 @@ class SoracleTestStateMachine(SoracleStateMachine):
             for j in range(len(amounts)):
                 self.add_rewards(amounts[j])
                 j += 1
-                boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
+                boa.env.time_travel(
+                    seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK
+                )
             price_change = self._get_final_price() / price_change
             self.update_price()
             self.soracle.price_v2()
@@ -149,21 +154,28 @@ class SoracleTestStateMachine(SoracleStateMachine):
                 j = 0
                 if i in self.st_weeks:
                     for ts_delta in self.st_iterate_over_week:
-                        while (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[j]:
+                        while (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[
+                            j
+                        ]:
                             self.add_rewards(amounts[j])
                             j += 1
                         boa.env.time_travel(seconds=ts_delta)
-                        assert self.soracle.price_v2() == pytest.approx(self.price(), rel=price_change)
+                        assert self.soracle.price_v2() == pytest.approx(
+                            self.price(), rel=price_change
+                        )
                 while j < len(amounts):
                     self.add_rewards(amounts[j])
                     j += 1
-                    boa.env.time_travel(seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK)
+                    boa.env.time_travel(
+                        seconds=week_checkpoints[j]
+                        - (boa.env.evm.patch.timestamp - sim_start) % WEEK
+                    )
 
     def _get_final_price(self):
         total_idle = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[1])
         total_supply = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[2])
         balance_of_self = boa.env.evm.get_storage(self.scrvusd.address, self.soracle_slots[6])
-        return total_idle * 10 ** 18 // (total_supply - balance_of_self)
+        return total_idle * 10**18 // (total_supply - balance_of_self)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -173,7 +185,7 @@ def max_acceleration(soracle, admin):
     """
     # big enough to be omitted in calculation and
     # small enough not to overflow
-    max_acceleration = 2 ** 128 - 1
+    max_acceleration = 2**128 - 1
     soracle.eval(f"self.max_acceleration = {max_acceleration}")
     return max_acceleration
 
@@ -191,19 +203,19 @@ def test_price_simple(crvusd, scrvusd, admin, soracle, soracle_price_slots, veri
     )
     machine.price_v0()
     machine.price_v1()
-    machine._price_v2(333 * 10 ** 18)
+    machine._price_v2(333 * 10**18)
 
-    machine.user_changes(4444 * 10 ** 18)
+    machine.user_changes(4444 * 10**18)
     machine.wait(3600)
     machine.price_v0()
     machine.price_v1()
-    machine._price_v2(333 * 10 ** 18)
+    machine._price_v2(333 * 10**18)
 
-    machine.add_rewards(22 * 10 ** 18)
+    machine.add_rewards(22 * 10**18)
     machine.wait(1800)
     machine.price_v0()
     machine.price_v1()
-    machine._price_v2(333 * 10 ** 18)
+    machine._price_v2(333 * 10**18)
 
 
 def test_period_not_full(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
@@ -240,5 +252,5 @@ def test_scrvusd_oracle(crvusd, scrvusd, admin, soracle, soracle_price_slots, ve
             max_examples=10,
             stateful_step_count=10,
             deadline=None,
-        )
+        ),
     )

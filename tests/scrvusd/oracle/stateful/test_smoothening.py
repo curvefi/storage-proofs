@@ -2,8 +2,7 @@ import functools
 
 import boa
 from hypothesis import settings
-from hypothesis import strategies as st
-from hypothesis.stateful import invariant, run_state_machine_as_test, given
+from hypothesis.stateful import invariant, run_state_machine_as_test
 
 from tests.scrvusd.oracle.stateful.crvusd_state_machine import SoracleStateMachine
 import pytest
@@ -33,7 +32,10 @@ class SmootheningStateMachine(SoracleStateMachine):
     # )  # generates ts_delta
 
     st_period_timestamps = [0, 1, 2, 60, 3600, 86400, PERIOD_CHECK_DURATION // 10]
-    st_iterate_over_period = [x[1] - x[0] for x in zip([0] + st_period_timestamps, st_period_timestamps + [PERIOD_CHECK_DURATION])]
+    st_iterate_over_period = [
+        x[1] - x[0]
+        for x in zip([0] + st_period_timestamps, st_period_timestamps + [PERIOD_CHECK_DURATION])
+    ]
 
     def __init__(self, crvusd, scrvusd, admin, soracle, verifier, soracle_slots, max_acceleration):
         super().__init__(crvusd, scrvusd, admin, soracle, verifier, soracle_slots)
@@ -46,7 +48,8 @@ class SmootheningStateMachine(SoracleStateMachine):
         Test that price moves within limits set.
         """
         for get_soracle_price in [
-            getattr(self.soracle, price_fn) for price_fn in [
+            getattr(self.soracle, price_fn)
+            for price_fn in [
                 "price_v0",
                 "price_v1",
                 "price_v2",
@@ -60,21 +63,25 @@ class SmootheningStateMachine(SoracleStateMachine):
 
                     # Upper bound
                     # In fact, linear approximation is strictly less except new_ts - prev_ts == 1
-                    assert (new_price / prev_price) <= (1. + (self.max_acceleration / 10 ** 18)) ** (new_ts - prev_ts)
+                    assert (new_price / prev_price) <= (1.0 + (self.max_acceleration / 10**18)) ** (
+                        new_ts - prev_ts
+                    )
 
                     # TODO: Lower bound
 
                     prev_price, prev_ts = new_price, new_ts
 
 
-@pytest.fixture(scope="module", params=[10 ** 11, 10 ** 12, 10 ** 13])
+@pytest.fixture(scope="module", params=[10**11, 10**12, 10**13])
 def max_acceleration(soracle, admin, request):
     with boa.env.prank(admin):
         soracle.set_max_acceleration(request.param)
     return request.param
 
 
-def test_smoothening_simple(crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier):
+def test_smoothening_simple(
+    crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier
+):
     machine = SmootheningStateMachine(
         # ScrvusdStateMachine
         crvusd=crvusd,
@@ -89,10 +96,10 @@ def test_smoothening_simple(crvusd, scrvusd, admin, max_acceleration, soracle, s
     )
     machine.smoothed_price()
 
-    machine.user_changes(4444 * 10 ** 18)
+    machine.user_changes(4444 * 10**18)
     machine.smoothed_price()
 
-    machine.add_rewards(666_666 * 10 ** 18)
+    machine.add_rewards(666_666 * 10**18)
     machine.smoothed_price()
 
     machine.wait(86400 * 2)
@@ -100,7 +107,9 @@ def test_smoothening_simple(crvusd, scrvusd, admin, max_acceleration, soracle, s
 
 
 @pytest.mark.slow
-def test_scrvusd_oracle(crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier):
+def test_scrvusd_oracle(
+    crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier
+):
     run_state_machine_as_test(
         functools.partial(
             SmootheningStateMachine,
@@ -119,5 +128,5 @@ def test_scrvusd_oracle(crvusd, scrvusd, admin, max_acceleration, soracle, sorac
             max_examples=10,
             stateful_step_count=20,
             deadline=None,
-        )
+        ),
     )

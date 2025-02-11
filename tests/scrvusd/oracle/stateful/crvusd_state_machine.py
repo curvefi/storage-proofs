@@ -3,7 +3,7 @@ from hypothesis import strategies as st, settings
 from hypothesis.stateful import RuleBasedStateMachine, rule
 
 
-DUST_AMOUNT = 10 ** 10
+DUST_AMOUNT = 10**10
 
 settings.register_profile("default", settings(deadline=None))
 settings.load_profile("default")
@@ -31,7 +31,7 @@ class ScrvusdStateMachine(RuleBasedStateMachine):
 
         # premint and initial deposit
         self.crvusd._mint_for_testing(self.user, 10 ** (18 * 3))
-        self.crvusd.approve(self.scrvusd, 2 ** 256 - 1)
+        self.crvusd.approve(self.scrvusd, 2**256 - 1)
         self.scrvusd.deposit(10**18, self.user)
         self.add_rewards(10 ** (18 - 3))
 
@@ -41,7 +41,7 @@ class ScrvusdStateMachine(RuleBasedStateMachine):
         """
         return self.scrvusd.pricePerShare()
 
-    @rule(supply=st.integers(min_value=DUST_AMOUNT, max_value=10 ** 36))
+    @rule(supply=st.integers(min_value=DUST_AMOUNT, max_value=10**36))
     def user_changes(self, supply):
         """
         User crvUSD deposit/withdraw. Using scrvUSD supply parametrization to
@@ -55,7 +55,7 @@ class ScrvusdStateMachine(RuleBasedStateMachine):
         elif diff < 0:
             self.scrvusd.redeem(-diff, self.user, self.user)
 
-    @rule(amount=st.integers(min_value=1, max_value=10 ** 9 * 10 ** 18))
+    @rule(amount=st.integers(min_value=1, max_value=10**9 * 10**18))
     def add_rewards(self, amount):
         """
         Adding rewards like from FeeSplitter.

@@ -25,8 +25,9 @@ def test_update(boracle, anne, operation):
 
     blockhash = boracle.get_block_hash(number)
     assert blockhash != EMPTY_BYTES32, "BlockHash not set"
-    assert boracle.commitments(anne, number) == blockhash if operation == "commit" else EMPTY_BYTES32, \
-        "Commitment not registered"
+    assert (
+        boracle.commitments(anne, number) == blockhash if operation == "commit" else EMPTY_BYTES32
+    ), "Commitment not registered"
     assert boracle.find_known_block_number() == number, "Could not find new block"
     assert boracle.find_known_block_number(number) == number, "Could not find new block"
     assert boracle.find_known_block_number(number + 10) == number, "Could not find new block"

@@ -5,7 +5,7 @@ import pytest
 @pytest.fixture(scope="module")
 def soracle(admin):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10 ** 18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10**18)
     return contract
 
 

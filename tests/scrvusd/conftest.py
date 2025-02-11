@@ -5,7 +5,7 @@ import eth_abi
 import eth_utils
 
 
-DEFAULT_MAX_ACCELERATION = 2 * 10 ** 12
+DEFAULT_MAX_ACCELERATION = 2 * 10**12
 DEFAULT_MAX_V2_DURATION = 6 * 4
 
 
@@ -28,8 +28,8 @@ def scrvusd(crvusd, admin):
             admin,
             604800,  # profit_max_unlock_time
         )
-        scrvusd.set_role(admin, 2 ** 14 - 1)
-        scrvusd.set_deposit_limit(2 ** 256 - 1)
+        scrvusd.set_role(admin, 2**14 - 1)
+        scrvusd.set_deposit_limit(2**256 - 1)
     return scrvusd
 
 
@@ -49,7 +49,10 @@ def soracle_price_slots(scrvusd):
         38,  # full_profit_unlock_date
         39,  # profit_unlocking_rate
         40,  # last_profit_update
-        int(eth_utils.keccak(eth_abi.encode(["(uint256,address)"], [[18, scrvusd.address]])).hex(), 16),  # balance_of_self
+        int(
+            eth_utils.keccak(eth_abi.encode(["(uint256,address)"], [[18, scrvusd.address]])).hex(),
+            16,
+        ),  # balance_of_self
     ]
 
 
