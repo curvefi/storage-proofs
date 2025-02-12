@@ -1,6 +1,5 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
     rev: v0.9.6
     hooks:
       # Run the linter.
@@ -9,9 +8,20 @@ repos:
       - id: ruff-format
   - repo: local
     hooks:
+      - id: mamushi
+        name: mamushi
+        entry: mamushi --line-length 100
+        # Explanation of regexp
+        # include: [ contracts/, tests/ ]
+        # exclude: [ contracts/xdao/, tests/scrvusd/contracts/scrvusd/ ] (submodules)
+        # types: [ .vy, .vyi ]
+        files: "^(contracts/(?!xdao/)|tests/(?!scrvusd/contracts/scrvusd/)).*\\.(vy|vyi)$"
+        language: system
+        stages: [ commit ]
       - id: pytest-check
         name: pytest-check
         entry: pytest
         language: system
         pass_filenames: false
         always_run: true
+        stages: [ push ]

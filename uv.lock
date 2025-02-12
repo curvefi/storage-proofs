@@ -1812,15 +1812,11 @@ dependencies = [
     { name = "mamushi" },
     { name = "py-evm" },
     { name = "pytest-xdist" },
+    { name = "ruff" },
     { name = "snekmate" },
     { name = "titanoboa" },
     { name = "vyper" },
     { name = "web3" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -1829,14 +1825,12 @@ requires-dist = [
     { name = "mamushi", specifier = "==0.0.4a3" },
     { name = "py-evm", specifier = "==0.10.1b2" },
     { name = "pytest-xdist", specifier = ">=3.6.1" },
+    { name = "ruff", specifier = ">=0.9.6" },
     { name = "snekmate", specifier = "==0.1.0" },
     { name = "titanoboa", git = "https://github.com/vyperlang/titanoboa.git?rev=19d2a5d7745ac8ed29639257e8d49bfb1bdb366a" },
     { name = "vyper", specifier = ">=0.4.0" },
     { name = "web3", specifier = ">=7.0.0" },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.9.6" }]
 
 [[package]]
 name = "titanoboa"

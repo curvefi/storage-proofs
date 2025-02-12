@@ -12,7 +12,6 @@
 
 version: public(constant(String[8])) = "1.0.0"
 
-
 from snekmate.auth import access_control
 
 initializes: access_control
@@ -30,8 +29,10 @@ event PriceUpdate:
     price_params_ts: uint256  # timestamp at which price is recorded
     block_number: uint256
 
+
 event SetMaxAcceleration:
     max_acceleration: uint256
+
 
 event SetMaxV2Duration:
     max_v2_duration: uint256
@@ -94,7 +95,7 @@ def __init__(_initial_price: uint256):
     # 2 * 10 ** 12 is equivalent to
     #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
     #   2) linearly approximated to max 63% APY
-    self.max_acceleration = 2 * 10 ** 12
+    self.max_acceleration = 2 * 10**12
     self.max_v2_duration = 4 * 6  # half a year
 
     access_control.__init__()
@@ -104,7 +105,7 @@ def __init__(_initial_price: uint256):
 
 @view
 @external
-def price_v0(_i: uint256=0) -> uint256:
+def price_v0(_i: uint256 = 0) -> uint256:
     """
     @notice Get lower bound of `scrvUSD.pricePerShare()`
     @dev Price is updated in steps, need to verify every % changed
@@ -115,7 +116,7 @@ def price_v0(_i: uint256=0) -> uint256:
 
 @view
 @external
-def price_v1(_i: uint256=0) -> uint256:
+def price_v1(_i: uint256 = 0) -> uint256:
     """
     @notice Get approximate `scrvUSD.pricePerShare()`
     @dev Price is simulated as if noone interacted to change `scrvUSD.pricePerShare()`,
@@ -127,7 +128,7 @@ def price_v1(_i: uint256=0) -> uint256:
 
 @view
 @external
-def price_v2(_i: uint256=0) -> uint256:
+def price_v2(_i: uint256 = 0) -> uint256:
     """
     @notice Get approximate `scrvUSD.pricePerShare()`
     @dev Uses assumption that crvUSD gains same rewards.
@@ -138,7 +139,9 @@ def price_v2(_i: uint256=0) -> uint256:
 
 @view
 @external
-def raw_price(_i: uint256=0, _ts: uint256=block.timestamp, _parameters_ts: uint256=block.timestamp) -> uint256:
+def raw_price(
+    _i: uint256 = 0, _ts: uint256 = block.timestamp, _parameters_ts: uint256 = block.timestamp
+) -> uint256:
     """
     @notice Get approximate `scrvUSD.pricePerShare()` without smoothening
     @param _i 0 (default) for `pricePerShare()` and 1 for `pricePerAsset()`
@@ -151,7 +154,9 @@ def raw_price(_i: uint256=0, _ts: uint256=block.timestamp, _parameters_ts: uint2
 @view
 def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
     # Ideally should be (max_acceleration / 10**18) ** (block.timestamp - self.last_update)
-    max_change: uint256 = self.max_acceleration * (block.timestamp - self.last_update) * last_price // 10 ** 18
+    max_change: uint256 = (
+        self.max_acceleration * (block.timestamp - self.last_update) * last_price // 10**18
+    )
     # -max_change <= (raw_price - last_price) <= max_change
     if unsafe_sub(raw_price + max_change, last_price) > 2 * max_change:
         return last_price + max_change if raw_price > last_price else last_price - max_change
@@ -160,17 +165,24 @@ def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
 
 @view
 def _price_v0() -> uint256:
-    return self._smoothed_price(self.last_prices[0], self._raw_price(self.price_params_ts, self.price_params.last_profit_update))
+    return self._smoothed_price(
+        self.last_prices[0],
+        self._raw_price(self.price_params_ts, self.price_params.last_profit_update),
+    )
 
 
 @view
 def _price_v1() -> uint256:
-    return self._smoothed_price(self.last_prices[1], self._raw_price(block.timestamp, self.price_params_ts))
+    return self._smoothed_price(
+        self.last_prices[1], self._raw_price(block.timestamp, self.price_params_ts)
+    )
 
 
 @view
 def _price_v2() -> uint256:
-    return self._smoothed_price(self.last_prices[2], self._raw_price(block.timestamp, block.timestamp))
+    return self._smoothed_price(
+        self.last_prices[2], self._raw_price(block.timestamp, block.timestamp)
+    )
 
 
 @view
@@ -203,14 +215,14 @@ def _unlocked_shares(
 @view
 def _total_supply(p: PriceParams, ts: uint256) -> uint256:
     # Need to account for the shares issued to the vault that have unlocked.
-    return p.total_supply -\
-        self._unlocked_shares(
-            p.full_profit_unlock_date,
-            p.profit_unlocking_rate,
-            p.last_profit_update,
-            p.balance_of_self,
-            ts,  # block.timestamp
-        )
+    return p.total_supply - self._unlocked_shares(
+        p.full_profit_unlock_date,
+        p.profit_unlocking_rate,
+        p.last_profit_update,
+        p.balance_of_self,
+        ts,  # block.timestamp
+    )
+
 
 @view
 def _total_assets(p: PriceParams) -> uint256:
@@ -239,16 +251,25 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
     )
 
     # locked shares at moment params.last_profit_update
-    gain: uint256 = params.balance_of_self * (params.total_idle + params.total_debt) // params.total_supply
+    gain: uint256 = (
+        params.balance_of_self * (params.total_idle + params.total_debt) // params.total_supply
+    )
     params.total_idle += gain * number_of_periods
 
     for _: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
-        new_balance_of_self: uint256 = params.balance_of_self * (params.total_supply - params.balance_of_self) // params.total_supply
-        params.total_supply -= params.balance_of_self * params.balance_of_self // params.total_supply
+        new_balance_of_self: uint256 = (
+            params.balance_of_self
+            * (params.total_supply - params.balance_of_self) // params.total_supply
+        )
+        params.total_supply -= (
+            params.balance_of_self * params.balance_of_self // params.total_supply
+        )
         params.balance_of_self = new_balance_of_self
 
     if params.full_profit_unlock_date > params.last_profit_update:
-        params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // (params.full_profit_unlock_date - params.last_profit_update)
+        params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // (
+            params.full_profit_unlock_date - params.last_profit_update
+        )
     else:
         params.profit_unlocking_rate = 0
     params.full_profit_unlock_date += number_of_periods * period
@@ -263,11 +284,13 @@ def _raw_price(ts: uint256, parameters_ts: uint256) -> uint256:
     @notice Price replication from scrvUSD vault
     """
     parameters: PriceParams = self._obtain_price_params(parameters_ts)
-    return self._total_assets(parameters) * 10 ** 18 // self._total_supply(parameters, ts)
+    return self._total_assets(parameters) * 10**18 // self._total_supply(parameters, ts)
 
 
 @external
-def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256) -> uint256:
+def update_price(
+    _parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256
+) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
@@ -299,8 +322,8 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_numbe
     new_price: uint256 = self._raw_price(_ts, _ts)
     log PriceUpdate(new_price, _ts, _block_number)
     if new_price > current_price:
-        return (new_price - current_price) * 10 ** 18 // current_price
-    return (current_price - new_price) * 10 ** 18 // current_price
+        return (new_price - current_price) * 10**18 // current_price
+    return (current_price - new_price) * 10**18 // current_price
 
 
 @external
@@ -331,7 +354,7 @@ def set_max_acceleration(_max_acceleration: uint256):
     """
     access_control._check_role(access_control.DEFAULT_ADMIN_ROLE, msg.sender)
 
-    assert 10 ** 8 <= _max_acceleration and _max_acceleration <= 10 ** 18
+    assert 10**8 <= _max_acceleration and _max_acceleration <= 10**18
     self.max_acceleration = _max_acceleration
 
     log SetMaxAcceleration(_max_acceleration)

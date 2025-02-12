@@ -13,10 +13,16 @@ implements: IBlockHashOracle
 
 version: public(constant(String[8])) = "0.1.0"
 
-interface ISignalService:
-    def getSyncedChainData(_chainId: uint64, _kind: bytes32, _blockId: uint64) -> (uint64, bytes32): view
 
-SIGNAL_SERVICE: constant(ISignalService) = ISignalService(0x1670000000000000000000000000000000000005)
+interface ISignalService:
+    def getSyncedChainData(_chainId: uint64, _kind: bytes32, _blockId: uint64) -> (
+        uint64, bytes32
+    ): view
+
+
+SIGNAL_SERVICE: constant(ISignalService) = ISignalService(
+    0x1670000000000000000000000000000000000005
+)
 H_STATE_ROOT: public(constant(bytes32)) = keccak256("STATE_ROOT")
 
 MAX_LOOKUP: constant(uint256) = 3600 // 12  # An hour
@@ -43,7 +49,9 @@ def get_state_root(_number: uint256) -> bytes32:
     """
     block_id: uint64 = empty(uint64)
     state_root: bytes32 = empty(bytes32)
-    block_id, state_root = staticcall SIGNAL_SERVICE.getSyncedChainData(1, H_STATE_ROOT, convert(_number, uint64))
+    block_id, state_root = staticcall SIGNAL_SERVICE.getSyncedChainData(
+        1, H_STATE_ROOT, convert(_number, uint64)
+    )
     assert state_root != empty(bytes32)
 
     return state_root
@@ -51,7 +59,7 @@ def get_state_root(_number: uint256) -> bytes32:
 
 @view
 @external
-def find_known_block_number(_before: uint256=0) -> uint256:
+def find_known_block_number(_before: uint256 = 0) -> uint256:
     """
     @notice Find known block number, not optimized for on-chain use.
         No guarantee to be the last available block.

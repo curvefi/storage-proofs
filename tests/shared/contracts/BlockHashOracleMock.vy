@@ -1,6 +1,7 @@
 # pragma version ~=0.4
 
 from contracts.blockhash import IBlockHashOracle
+
 implements: IBlockHashOracle
 
 block_hash: public(HashMap[uint256, bytes32])
@@ -39,5 +40,5 @@ def _set_state_root(_block_n: uint256, _state_root: bytes32):
 
 @view
 @external
-def find_known_block_number(_before: uint256=0) -> uint256:
+def find_known_block_number(_before: uint256 = 0) -> uint256:
     raise "NotImplemented"
