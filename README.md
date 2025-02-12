@@ -83,7 +83,7 @@ solc-select use 0.8.18
 npm install solidity-rlp@2.0.7
 ```
 
-Completely sync xdao and remove all but contracts/ folder:
+Completely sync submodules and remove all unnecessary files:
 ```shell
 git submodule update --init --recursive --depth 1
 find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} +

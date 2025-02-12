@@ -1821,30 +1821,38 @@ name = "storage-proofs"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "boa-solidity" },
     { name = "mamushi" },
-    { name = "py-evm" },
-    { name = "pytest-xdist" },
     { name = "ruff" },
     { name = "snekmate" },
-    { name = "solc-select" },
     { name = "titanoboa" },
     { name = "vyper" },
     { name = "web3" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "boa-solidity" },
+    { name = "py-evm" },
+    { name = "pytest-xdist" },
+    { name = "solc-select" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "boa-solidity", git = "https://github.com/z80dev/boa-solidity?rev=3e00649f643ce69108f266942c90bffc717b18b7" },
     { name = "mamushi", specifier = "==0.0.4a3" },
-    { name = "py-evm", specifier = "==0.10.1b2" },
-    { name = "pytest-xdist", specifier = ">=3.6.1" },
     { name = "ruff", specifier = ">=0.9.6" },
     { name = "snekmate", specifier = "==0.1.0" },
-    { name = "solc-select", specifier = ">=1.0.4" },
     { name = "titanoboa", git = "https://github.com/vyperlang/titanoboa.git?rev=19d2a5d7745ac8ed29639257e8d49bfb1bdb366a" },
     { name = "vyper", specifier = ">=0.4.0" },
     { name = "web3", specifier = ">=7.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "boa-solidity", git = "https://github.com/z80dev/boa-solidity?rev=3e00649f643ce69108f266942c90bffc717b18b7" },
+    { name = "py-evm", specifier = "==0.10.1b2" },
+    { name = "pytest-xdist", specifier = ">=3.6.1" },
+    { name = "solc-select", specifier = ">=1.0.4" },
 ]
 
 [[package]]
