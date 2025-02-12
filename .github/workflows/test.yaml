@@ -26,4 +26,4 @@ jobs:
           find tests/scrvusd/contracts/scrvusd -depth -mindepth 1 ! -wholename 'tests/scrvusd/contracts/scrvusd/contracts/yearn/VaultV3.vy' -type f -delete
           find tests/scrvusd/contracts/scrvusd -depth -type d -empty -delete
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest .
