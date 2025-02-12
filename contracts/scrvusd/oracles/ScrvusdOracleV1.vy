@@ -16,13 +16,16 @@ from snekmate.auth import ownable
 initializes: ownable
 exports: ownable.__interface__
 
+
 event PriceUpdate:
     new_price: uint256  # price to achieve
     price_params_ts: uint256  # timestamp at which price is recorded
     block_number: uint256
 
+
 event SetVerifier:
     verifier: address
+
 
 event SetMaxAcceleration:
     max_acceleration: uint256
@@ -69,14 +72,14 @@ def __init__(_initial_price: uint256):
     # 2 * 10 ** 12 is equivalent to
     #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
     #   2) linearly approximated to max 63% APY
-    self.max_acceleration = 2 * 10 ** 12
+    self.max_acceleration = 2 * 10**12
 
     ownable.__init__()
 
 
 @view
 @external
-def price_v0(_i: uint256=0) -> uint256:
+def price_v0(_i: uint256 = 0) -> uint256:
     """
     @notice Get lower bound of `scrvUSD.pricePerShare()`
     @dev Price is updated in steps, need to verify every % changed
@@ -87,7 +90,7 @@ def price_v0(_i: uint256=0) -> uint256:
 
 @view
 @external
-def price_v1(_i: uint256=0) -> uint256:
+def price_v1(_i: uint256 = 0) -> uint256:
     """
     @notice Get approximate `scrvUSD.pricePerShare()`
     @dev Price is simulated as if noone interacted to change `scrvUSD.pricePerShare()`,
@@ -99,7 +102,7 @@ def price_v1(_i: uint256=0) -> uint256:
 
 @view
 @external
-def raw_price(_i: uint256=0, _ts: uint256=block.timestamp) -> uint256:
+def raw_price(_i: uint256 = 0, _ts: uint256 = block.timestamp) -> uint256:
     """
     @notice Get approximate `scrvUSD.pricePerShare()` without smoothening
     @param _i 0 (default) for `pricePerShare()` and 1 for `pricePerAsset()`
@@ -159,14 +162,14 @@ def _unlocked_shares(
 def _total_supply(parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
     # Need to account for the shares issued to the vault that have unlocked.
     # return self.total_supply - self._unlocked_shares()
-    return parameters[ASSETS_PARAM_CNT + 0] -\
-        self._unlocked_shares(
-            parameters[ASSETS_PARAM_CNT + 1],  # full_profit_unlock_date
-            parameters[ASSETS_PARAM_CNT + 2],  # profit_unlocking_rate
-            parameters[ASSETS_PARAM_CNT + 3],  # last_profit_update
-            parameters[ASSETS_PARAM_CNT + 4],  # balance_of_self
-            ts,  # block.timestamp
-        )
+    return parameters[ASSETS_PARAM_CNT + 0] - self._unlocked_shares(
+        parameters[ASSETS_PARAM_CNT + 1],  # full_profit_unlock_date
+        parameters[ASSETS_PARAM_CNT + 2],  # profit_unlocking_rate
+        parameters[ASSETS_PARAM_CNT + 3],  # last_profit_update
+        parameters[ASSETS_PARAM_CNT + 4],  # balance_of_self
+        ts,  # block.timestamp
+    )
+
 
 @view
 def _total_assets(parameters: uint256[ALL_PARAM_CNT]) -> uint256:
@@ -183,11 +186,13 @@ def _raw_price(ts: uint256) -> uint256:
     @notice Price replication from scrvUSD vault
     """
     parameters: uint256[ALL_PARAM_CNT] = self.price_params
-    return self._total_assets(parameters) * 10 ** 18 // self._total_supply(parameters, ts)
+    return self._total_assets(parameters) * 10**18 // self._total_supply(parameters, ts)
 
 
 @external
-def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256) -> uint256:
+def update_price(
+    _parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256
+) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
@@ -209,7 +214,7 @@ def update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_numbe
 
     new_price: uint256 = self._raw_price(_ts)
     log PriceUpdate(new_price, _ts, _block_number)
-    return new_price * 10 ** 18 // current_price
+    return new_price * 10**18 // current_price
 
 
 @external
@@ -222,7 +227,7 @@ def set_max_acceleration(_max_acceleration: uint256):
     """
     ownable._check_owner()
 
-    assert 10 ** 8 <= _max_acceleration and _max_acceleration <= 10 ** 18
+    assert 10**8 <= _max_acceleration and _max_acceleration <= 10**18
     self.max_acceleration = _max_acceleration
 
     log SetMaxAcceleration(_max_acceleration)

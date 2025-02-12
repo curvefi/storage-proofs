@@ -87,6 +87,8 @@ Completely sync xdao and remove all but contracts/ folder:
 ```shell
 git submodule update --init --recursive --depth 1
 find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} +
+find tests/scrvusd/contracts/scrvusd -depth -mindepth 1 ! -wholename 'tests/scrvusd/contracts/scrvusd/contracts/yearn/VaultV3.vy' -type f -delete
+find tests/scrvusd/contracts/scrvusd -depth -type d -empty -delete
 ```
 
 ### Test

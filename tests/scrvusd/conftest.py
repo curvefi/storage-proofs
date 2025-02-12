@@ -18,9 +18,11 @@ def crvusd():
 def scrvusd(crvusd, admin):
     with boa.env.prank(admin):
         scrvusd = boa.load(
-            "tests/scrvusd/contracts/Vault.vy",
+            "tests/scrvusd/contracts/scrvusd/contracts/yearn/VaultV3.vy",
             override_address="0x0655977feb2f289a4ab78af67bab0d17aab84367",
         )
+        # Undo `self.asset = self`
+        boa.env.set_storage(scrvusd.address, 1, 0)
         scrvusd.initialize(
             crvusd,
             "Savings crvUSD",

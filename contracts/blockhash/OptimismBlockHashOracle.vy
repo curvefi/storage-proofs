@@ -16,6 +16,7 @@ implements: IBlockHashRetain
 
 version: public(constant(String[8])) = "0.1.0"
 
+
 interface IL1Block:
     def number() -> uint64: view
     def hash() -> bytes32: view
@@ -61,7 +62,7 @@ def get_state_root(_number: uint256) -> bytes32:
 
 @view
 @external
-def find_known_block_number(_before: uint256=0) -> uint256:
+def find_known_block_number(_before: uint256 = 0) -> uint256:
     """
     @notice Find known block number, not optimized for on-chain use.
         No guarantee to be the last available block.

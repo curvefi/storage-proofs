@@ -17,6 +17,7 @@ event CommitBlockHash:
     number: indexed(uint256)
     hash: bytes32
 
+
 # @dev Emitted when commits threshold reached and blockhash is applied.
 # Note that not all oracles use commit-apply scheme and this might be ignored.
 event ApplyBlockHash:

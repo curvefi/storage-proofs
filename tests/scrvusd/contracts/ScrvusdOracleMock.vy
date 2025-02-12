@@ -14,6 +14,7 @@ struct PriceParams:
     last_profit_update: uint256
     balance_of_self: uint256
 
+
 price_params: PriceParams
 price_params_ts: uint256
 last_block_number: public(uint256)
@@ -22,7 +23,11 @@ profit_max_unlock_time: public(uint256)
 
 
 @external
-def update_price(_parameters: uint256[ScrvusdOracleV2.ALL_PARAM_CNT], _ts: uint256, _block_number: uint256) -> uint256:
+def update_price(
+    _parameters: uint256[ScrvusdOracleV2.ALL_PARAM_CNT],
+    _ts: uint256,
+    _block_number: uint256,
+) -> uint256:
     self.price_params = PriceParams(
         total_debt=_parameters[0],
         total_idle=_parameters[1],
@@ -34,7 +39,7 @@ def update_price(_parameters: uint256[ScrvusdOracleV2.ALL_PARAM_CNT], _ts: uint2
     )
     self.price_params_ts = _ts
     self.last_block_number = _block_number
-    return 10 ** 18
+    return 10**18
 
 
 @external
