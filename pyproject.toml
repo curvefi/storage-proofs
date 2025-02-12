@@ -13,12 +13,17 @@ dependencies = [
     "web3>=7.0.0",
     "ruff>=0.9.6",
     "mamushi==0.0.4a3",
-    "pytest-xdist>=3.6.1",
-    "py-evm==0.10.1b2",  # Update after `pytest .` check
+    # placeholders for git dependencies
+    "titanoboa",
+]
+
+[dependency-groups]
+dev = [
     "solc-select>=1.0.4",
+    "py-evm==0.10.1b2",  # Update after `pytest .` check
+    "pytest-xdist>=3.6.1",
     # placeholders for git dependencies
     "boa-solidity",
-    "titanoboa",
 ]
 
 [tool.uv.sources]
