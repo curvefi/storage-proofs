@@ -1795,6 +1795,19 @@ wheels = [
 ]
 
 [[package]]
+name = "solc-select"
+version = "1.0.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pycryptodome" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/60/a0/2a2bfbbab1d9bd4e1a24e3604c30b5d6f84219238f3c98f06191faf5d019/solc-select-1.0.4.tar.gz", hash = "sha256:db7b9de009af6de3a5416b80bbe5b6d636bf314703c016319b8c1231e248a6c7", size = 21307 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/a6/e2b2529f77431bd610de0a09d633768e9538f986fa606180b3b9a4a05a89/solc_select-1.0.4-py3-none-any.whl", hash = "sha256:9a28b8a612ff18a171929d23e2ed68a6263f4e11784fc47fa81476a3219874cb", size = 20710 },
+]
+
+[[package]]
 name = "sortedcontainers"
 version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1814,6 +1827,7 @@ dependencies = [
     { name = "pytest-xdist" },
     { name = "ruff" },
     { name = "snekmate" },
+    { name = "solc-select" },
     { name = "titanoboa" },
     { name = "vyper" },
     { name = "web3" },
@@ -1827,6 +1841,7 @@ requires-dist = [
     { name = "pytest-xdist", specifier = ">=3.6.1" },
     { name = "ruff", specifier = ">=0.9.6" },
     { name = "snekmate", specifier = "==0.1.0" },
+    { name = "solc-select", specifier = ">=1.0.4" },
     { name = "titanoboa", git = "https://github.com/vyperlang/titanoboa.git?rev=19d2a5d7745ac8ed29639257e8d49bfb1bdb366a" },
     { name = "vyper", specifier = ">=0.4.0" },
     { name = "web3", specifier = ">=7.0.0" },
