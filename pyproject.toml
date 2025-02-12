@@ -32,3 +32,10 @@ boa-solidity = { git = "https://github.com/z80dev/boa-solidity", rev = "3e00649f
 
 [tool.ruff]
 line-length = 100
+
+[tool.pytest.ini_options]
+markers = [
+    "forked: Tests run in forked environment.",
+    "slow: Mark tests that take longer to execute, mainly stateful tests interacting with different contract states.",
+]
+pythonpath = ["."]

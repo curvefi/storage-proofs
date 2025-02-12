@@ -1,6 +1,6 @@
 # pragma version ~=0.4
 
-from ...contracts.blockhash import IBlockHashOracle
+from contracts.blockhash import IBlockHashOracle
 
 implements: IBlockHashOracle
 
