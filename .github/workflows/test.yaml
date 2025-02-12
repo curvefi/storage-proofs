@@ -27,3 +27,5 @@ jobs:
           find tests/scrvusd/contracts/scrvusd -depth -type d -empty -delete
       - name: Run tests
         run: uv run pytest
+        env:
+          SOLC_VERSION: 0.8.18
