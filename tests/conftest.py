@@ -66,5 +66,5 @@ def admin():
 
 
 @pytest.fixture(scope="module")
-def boracle():
+def boracle(admin):
     return boa.load("tests/shared/contracts/BlockhashOracleMock.vy")
