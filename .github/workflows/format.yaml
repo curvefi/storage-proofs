@@ -1,7 +1,7 @@
 name: CI
 on: push
 env:
-  RUFF_OUTPUT_FORMAT=github
+  RUFF_OUTPUT_FORMAT: github
 jobs:
   format:
     runs-on: ubuntu-latest

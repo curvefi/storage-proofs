@@ -15,6 +15,7 @@ dependencies = [
     "mamushi==0.0.4a3",
     "pytest-xdist>=3.6.1",
     "py-evm==0.10.1b2",  # Update after `pytest .` check
+    "solc-select>=1.0.4",
     # placeholders for git dependencies
     "boa-solidity",
     "titanoboa",
