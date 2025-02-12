@@ -1,5 +1,7 @@
 name: CI
 on: pull_request
+env:
+  WEB3_ETHEREUM_MAINNET_ALCHEMY_PROJECT_ID: empty
 jobs:
   build:
     runs-on: ubuntu-latest

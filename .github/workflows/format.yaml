@@ -11,8 +11,8 @@ jobs:
         run: uv sync --all-extras --dev
       - name: Run Ruff
         run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check --output-format=github .
+          ruff check --output-format=github .
+          ruff format --check --output-format=github .
       - name: Run mamushi
         # Submodules are not installed by here => will be skipped
-        run: uv run mamushi --line-length 100 contracts/ tests/
+        run: mamushi --line-length 100 contracts/ tests/
