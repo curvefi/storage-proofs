@@ -1,7 +1,9 @@
 name: CI
 on: push
+env:
+  RUFF_OUTPUT_FORMAT=github
 jobs:
-  build:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -11,8 +13,8 @@ jobs:
         run: uv sync --all-extras --dev
       - name: Run Ruff
         run: |
-          ruff check --output-format=github .
-          ruff format --check --output-format=github .
+          uv run ruff check .
+          uv run ruff format --check .
       - name: Run mamushi
         # Submodules are not installed by here => will be skipped
-        run: mamushi --line-length 100 contracts/ tests/
+        run: uv run mamushi --line-length 100 contracts/ tests/
