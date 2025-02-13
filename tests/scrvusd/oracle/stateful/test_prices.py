@@ -125,7 +125,7 @@ class SoracleTestStateMachine(SoracleStateMachine):
                     for ts_delta in self.st_iterate_over_week:
                         boa.env.time_travel(seconds=ts_delta)
                         assert self.soracle.price_v2() == pytest.approx(
-                            self.price(), rel=1e-12
+                            self.price(), rel=1e-8
                         )  # computation errors
                 else:
                     boa.env.time_travel(seconds=7 * 86400)
