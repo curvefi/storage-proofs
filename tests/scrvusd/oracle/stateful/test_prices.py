@@ -136,24 +136,24 @@ class SoracleTestStateMachine(SoracleStateMachine):
             amounts = [amount // 2, amount // 3]
             amounts.append(amount - sum(amounts))
             week_checkpoints = [0, 86400, 4 * 86400, 7 * 86400]
+            # forget about previous rewards, so they don't sum up resulting in huge error
+            boa.env.time_travel(seconds=7 * 86400)
             sim_start = boa.env.evm.patch.timestamp
 
             # Last week
             price_change = self._get_final_price()
-            for j in range(len(amounts)):
-                self.add_rewards(amounts[j])
-                j += 1
-                boa.env.time_travel(
-                    seconds=week_checkpoints[j] - (boa.env.evm.patch.timestamp - sim_start) % WEEK
-                )
+            self.add_rewards(
+                amount
+            )  # Can not simulate consecutive adding because reward periods may differ
+            boa.env.time_travel(seconds=7 * 86400)
             price_change = self._get_final_price() / price_change
             self.update_price()
-            self.soracle.price_v2()
 
             for i in range(max(self.st_weeks)):
                 j = 0
                 if i in self.st_weeks:
                     for ts_delta in self.st_iterate_over_week:
+                        boa.env.time_travel(seconds=ts_delta)
                         while (boa.env.evm.patch.timestamp - sim_start) % WEEK >= week_checkpoints[
                             j
                         ]:
@@ -232,6 +232,22 @@ def test_period_not_full(crvusd, scrvusd, admin, soracle, soracle_price_slots, v
     )
     state.update_price()
     state._price_v2(2)
+
+
+@pytest.mark.slow
+def test_example(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):
+    state = SoracleTestStateMachine(
+        # ScrvusdStateMachine
+        crvusd=crvusd,
+        scrvusd=scrvusd,
+        admin=admin,
+        # SoracleStateMachine
+        soracle=soracle,
+        verifier=verifier,
+        soracle_slots=soracle_price_slots,
+    )
+    state.user_changes(supply=10_000_000_084)
+    state.price_v2()
 
 
 @pytest.mark.slow
