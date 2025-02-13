@@ -256,6 +256,7 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
     )
     params.total_idle += gain * number_of_periods
 
+    # functions are reduced from `VaultV3._process_report()` given assumptions with constant gain
     for _: uint256 in range(number_of_periods, bound=MAX_V2_DURATION):
         new_balance_of_self: uint256 = (
             params.balance_of_self
@@ -267,11 +268,13 @@ def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
         params.balance_of_self = new_balance_of_self
 
     if params.full_profit_unlock_date > params.last_profit_update:
+        # copy from `VaultV3._process_report()`
         params.profit_unlocking_rate = params.balance_of_self * MAX_BPS_EXTENDED // (
             params.full_profit_unlock_date - params.last_profit_update
         )
     else:
         params.profit_unlocking_rate = 0
+
     params.full_profit_unlock_date += number_of_periods * period
     params.last_profit_update += number_of_periods * period
 
