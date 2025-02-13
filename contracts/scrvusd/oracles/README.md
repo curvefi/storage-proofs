@@ -1,4 +1,14 @@
+## V0
+Something like _read price from Ethereum_.
+**Known issues**:
+- Smoothening is not scaled to current price
+
+## V1
+Simulates price for ongoing period.
+
 ## V2
+Simulates equal gain over periods.
+
 ### Alternative version
 Not tested
 ```vyper

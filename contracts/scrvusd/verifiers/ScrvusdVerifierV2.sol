@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import {ScrvusdVerifierBasic, IBlockHashOracle, ScrvusdVerifierCore} from "./ScrvusdVerifierBasic.sol";
+import {ScrvusdVerifierV1, IBlockHashOracle} from "./ScrvusdVerifierV1.sol";
 import {RLPReader} from "hamdiallam/Solidity-RLP@2.0.7/contracts/RLPReader.sol";
 import {StateProofVerifier as Verifier} from "../../xdao/contracts/libs/StateProofVerifier.sol";
 
@@ -12,14 +12,14 @@ interface IScrvusdOracleV2 {
     ) external returns (bool);
 }
 
-contract ScrvusdVerifierBasicV2 is ScrvusdVerifierBasic {
+contract ScrvusdVerifierV2 is ScrvusdVerifierV1 {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
     uint256 internal PERIOD_SLOT = 37; // profit_max_unlock_time
 
     constructor(address _block_hash_oracle, address _scrvusd_oracle)
-        ScrvusdVerifierBasic(_block_hash_oracle, _scrvusd_oracle) {}
+        ScrvusdVerifierV1(_block_hash_oracle, _scrvusd_oracle) {}
 
     /// @param _block_header_rlp The RLP-encoded block header
     /// @param _proof_rlp The state proof of the period
@@ -30,7 +30,7 @@ contract ScrvusdVerifierBasicV2 is ScrvusdVerifierBasic {
         Verifier.BlockHeader memory block_header = Verifier.parseBlockHeader(_block_header_rlp);
         require(block_header.hash != bytes32(0), "Invalid blockhash");
         require(
-            block_header.hash == IBlockHashOracle(ScrvusdVerifierBasic.BLOCK_HASH_ORACLE).get_block_hash(block_header.number),
+            block_header.hash == IBlockHashOracle(ScrvusdVerifierV1.BLOCK_HASH_ORACLE).get_block_hash(block_header.number),
             "Blockhash mismatch"
         );
 
@@ -44,7 +44,7 @@ contract ScrvusdVerifierBasicV2 is ScrvusdVerifierBasic {
         uint256 _block_number,
         bytes memory _proof_rlp
     ) external returns (bool) {
-        bytes32 state_root = IBlockHashOracle(ScrvusdVerifierBasic.BLOCK_HASH_ORACLE).get_state_root(_block_number);
+        bytes32 state_root = IBlockHashOracle(ScrvusdVerifierV1.BLOCK_HASH_ORACLE).get_state_root(_block_number);
 
         uint256 period = _extractPeriodFromProof(state_root, _proof_rlp);
         return IScrvusdOracleV2(SCRVUSD_ORACLE).update_profit_max_unlock_time(period, _block_number);
@@ -60,7 +60,7 @@ contract ScrvusdVerifierBasicV2 is ScrvusdVerifierBasic {
 
         // Extract account proof
         Verifier.Account memory account = Verifier.extractAccountFromProof(
-            ScrvusdVerifierCore.SCRVUSD_HASH,
+            ScrvusdVerifierV1.SCRVUSD_HASH,
             stateRoot,
             proofs[0].toList()
         );

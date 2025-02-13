@@ -175,13 +175,11 @@ def _total_assets(parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT]) -> u
 def update_price(
     _parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT],
     _ts: uint256,
-    _block_number: uint256,
 ) -> uint256:
     """
     @notice Update price using `_parameters`
     @param _parameters Parameters of Yearn Vault to calculate scrvUSD price
     @param _ts Timestamp at which these parameters are true
-    @param _block_number Block number of parameters to linearize updates (ignored in this version)
     @return Relative price change of final price with 10^18 precision
     """
     assert msg.sender == self.prover
