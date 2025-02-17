@@ -5,6 +5,7 @@ Something like _read price from Ethereum_.
 
 ## V1
 Simulates price for ongoing period.
+`max_acceleration` was renamed to `max_price_increment`
 
 ## V2
 Simulates equal gain over periods.

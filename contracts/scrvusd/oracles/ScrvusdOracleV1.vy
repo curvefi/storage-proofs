@@ -27,8 +27,8 @@ event SetVerifier:
     verifier: address
 
 
-event SetMaxAcceleration:
-    max_acceleration: uint256
+event SetMaxPriceIncrement:
+    max_price_increment: uint256
 
 
 # scrvUSD Vault rate replication
@@ -54,7 +54,7 @@ last_update: uint256
 price_params: uint256[ALL_PARAM_CNT]
 price_params_ts: uint256
 
-max_acceleration: public(uint256)  # precision 10**18
+max_price_increment: public(uint256)  # precision 10**18
 
 
 @deploy
@@ -72,7 +72,7 @@ def __init__(_initial_price: uint256):
     # 2 * 10 ** 12 is equivalent to
     #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
     #   2) linearly approximated to max 63% APY
-    self.max_acceleration = 2 * 10**12
+    self.max_price_increment = 2 * 10**12
 
     ownable.__init__()
 
@@ -114,7 +114,7 @@ def raw_price(_i: uint256 = 0, _ts: uint256 = block.timestamp) -> uint256:
 @view
 def _smoothed_price(last_price: uint256, ts: uint256) -> uint256:
     raw_price: uint256 = self._raw_price(ts)
-    max_change: uint256 = self.max_acceleration * (block.timestamp - self.last_update)
+    max_change: uint256 = self.max_price_increment * (block.timestamp - self.last_update)
     # -max_change <= (raw_price - last_price) <= max_change
     if unsafe_sub(raw_price + max_change, last_price) > 2 * max_change:
         return last_price + max_change if raw_price > last_price else last_price - max_change
@@ -218,19 +218,19 @@ def update_price(
 
 
 @external
-def set_max_acceleration(_max_acceleration: uint256):
+def set_max_price_increment(_max_price_increment: uint256):
     """
-    @notice Set maximum acceleration of scrvUSD.
+    @notice Set maximum price increment of scrvUSD.
         Must be less than StableSwap's minimum fee.
         fee / (2 * block_time) is considered to be safe.
-    @param _max_acceleration Maximum acceleration (per sec)
+    @param _max_price_increment Maximum acceleration (per sec)
     """
     ownable._check_owner()
 
-    assert 10**8 <= _max_acceleration and _max_acceleration <= 10**18
-    self.max_acceleration = _max_acceleration
+    assert 10**8 <= _max_price_increment and _max_price_increment <= 10**18
+    self.max_price_increment = _max_price_increment
 
-    log SetMaxAcceleration(_max_acceleration)
+    log SetMaxPriceIncrement(_max_price_increment)
 
 
 @external
