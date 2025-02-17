@@ -6,11 +6,11 @@
     Supports 2 types of approximation: assuming no changes through 1 rewards period and several periods with equal gains.
 @license MIT
 @author curve.fi
-@custom:version 1.0.0
+@custom:version 2.0.0
 @custom:security security@curve.fi
 """
 
-version: public(constant(String[8])) = "1.0.0"
+version: public(constant(String[8])) = "2.0.0"
 
 from snekmate.auth import access_control
 
@@ -30,7 +30,7 @@ event PriceUpdate:
     block_number: uint256
 
 
-event SetMaxAcceleration:
+event SetMaxPriceIncrement:
     max_acceleration: uint256
 
 
@@ -68,7 +68,7 @@ profit_max_unlock_time: public(uint256)
 price_params: PriceParams
 price_params_ts: uint256
 
-max_acceleration: public(uint256)  # precision 10**18
+max_price_increment: public(uint256)  # precision 10**18
 max_v2_duration: public(uint256)  # number of periods(weeks)
 
 
@@ -95,7 +95,7 @@ def __init__(_initial_price: uint256):
     # 2 * 10 ** 12 is equivalent to
     #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
     #   2) linearly approximated to max 63% APY
-    self.max_acceleration = 2 * 10**12
+    self.max_price_increment = 2 * 10**12
     self.max_v2_duration = 4 * 6  # half a year
 
     access_control.__init__()
@@ -153,9 +153,10 @@ def raw_price(
 
 @view
 def _smoothed_price(last_price: uint256, raw_price: uint256) -> uint256:
-    # Ideally should be (max_acceleration / 10**18) ** (block.timestamp - self.last_update)
+    # Ideally should be (max_price_increment / 10**18) ** (block.timestamp - self.last_update)
+    # Using linear approximation to simplify calculations
     max_change: uint256 = (
-        self.max_acceleration * (block.timestamp - self.last_update) * last_price // 10**18
+        self.max_price_increment * (block.timestamp - self.last_update) * last_price // 10**18
     )
     # -max_change <= (raw_price - last_price) <= max_change
     if unsafe_sub(raw_price + max_change, last_price) > 2 * max_change:
@@ -348,19 +349,19 @@ def update_profit_max_unlock_time(_profit_max_unlock_time: uint256, _block_numbe
 
 
 @external
-def set_max_acceleration(_max_acceleration: uint256):
+def set_max_price_increment(_max_price_increment: uint256):
     """
-    @notice Set maximum acceleration of scrvUSD.
+    @notice Set maximum price increment of scrvUSD.
         Must be less than StableSwap's minimum fee.
         fee / (2 * block_time) is considered to be safe.
-    @param _max_acceleration Maximum acceleration (per sec)
+    @param _max_price_increment Maximum acceleration (per sec)
     """
     access_control._check_role(access_control.DEFAULT_ADMIN_ROLE, msg.sender)
 
-    assert 10**8 <= _max_acceleration and _max_acceleration <= 10**18
-    self.max_acceleration = _max_acceleration
+    assert 10**8 <= _max_price_increment and _max_price_increment <= 10**18
+    self.max_price_increment = _max_price_increment
 
-    log SetMaxAcceleration(_max_acceleration)
+    log SetMaxPriceIncrement(_max_price_increment)
 
 
 @external

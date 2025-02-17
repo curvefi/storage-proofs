@@ -179,15 +179,15 @@ class SoracleTestStateMachine(SoracleStateMachine):
 
 
 @pytest.fixture(scope="module", autouse=True)
-def max_acceleration(soracle, admin):
+def max_price_increment(soracle, admin):
     """
     Turning off smoothening.
     """
     # big enough to be omitted in calculation and
     # small enough not to overflow
-    max_acceleration = 2**128 - 1
-    soracle.eval(f"self.max_acceleration = {max_acceleration}")
-    return max_acceleration
+    max_price_increment = 2**128 - 1
+    soracle.eval(f"self.max_price_increment = {max_price_increment}")
+    return max_price_increment
 
 
 def test_price_simple(crvusd, scrvusd, admin, soracle, soracle_price_slots, verifier):

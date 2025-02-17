@@ -1,7 +1,7 @@
 import pytest
 import boa
 
-from tests.scrvusd.conftest import DEFAULT_MAX_ACCELERATION, DEFAULT_MAX_V2_DURATION
+from tests.scrvusd.conftest import DEFAULT_MAX_PRICE_INCREMENT, DEFAULT_MAX_V2_DURATION
 from tests.scrvusd.oracle.unitary.test_v1 import test_update_price  # noqa: F401  # reusing test
 
 
@@ -19,13 +19,13 @@ def test_ownership(soracle, admin, anne):
 
     # Reachable for admin
     with boa.env.prank(admin):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
         soracle.set_max_v2_duration(DEFAULT_MAX_V2_DURATION + 1)
 
     # Not reachable for third party
     with boa.env.prank(anne):
         with boa.reverts():
-            soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 2)
+            soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 2)
         with boa.reverts():
             soracle.set_max_v2_duration(DEFAULT_MAX_V2_DURATION + 2)
 
@@ -38,22 +38,22 @@ def test_ownership(soracle, admin, anne):
 
     # Reachable for new owner
     with boa.env.prank(anne):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 2)
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 2)
         soracle.set_max_v2_duration(DEFAULT_MAX_V2_DURATION + 2)
 
     # Renounceable, making it immutable
     with boa.env.prank(anne):
         soracle.revokeRole(admin_role, anne)
         with boa.reverts():
-            soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
+            soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
         with boa.reverts():
             soracle.set_max_v2_duration(DEFAULT_MAX_V2_DURATION + 1)
 
 
 def test_setters(soracle, admin):
     with boa.env.prank(admin):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
-        assert soracle.max_acceleration() == DEFAULT_MAX_ACCELERATION + 1
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
+        assert soracle.max_price_increment() == DEFAULT_MAX_PRICE_INCREMENT + 1
 
         soracle.set_max_v2_duration(DEFAULT_MAX_V2_DURATION + 1)
         assert soracle.max_v2_duration() == DEFAULT_MAX_V2_DURATION + 1

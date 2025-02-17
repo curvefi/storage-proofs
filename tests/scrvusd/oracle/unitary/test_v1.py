@@ -1,7 +1,7 @@
 import pytest
 import boa
 
-from tests.scrvusd.conftest import DEFAULT_MAX_ACCELERATION
+from tests.scrvusd.conftest import DEFAULT_MAX_PRICE_INCREMENT
 
 
 @pytest.fixture(scope="module")
@@ -16,13 +16,13 @@ def test_ownership(soracle, admin, anne):
 
     # Reachable for admin
     with boa.env.prank(admin):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
         soracle.set_verifier(admin)
 
     # Not reachable for third party
     with boa.env.prank(anne):
         with boa.reverts():
-            soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 2)
+            soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 2)
         with boa.reverts():
             soracle.set_verifier(anne)
 
@@ -33,22 +33,22 @@ def test_ownership(soracle, admin, anne):
 
     # Reachable for new owner
     with boa.env.prank(anne):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 2)
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 2)
         soracle.set_verifier(anne)
 
     # Renounceable, making it immutable
     with boa.env.prank(anne):
         soracle.renounce_ownership()
         with boa.reverts():
-            soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
+            soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
         with boa.reverts():
             soracle.set_verifier(admin)
 
 
 def test_setters(soracle, admin, anne):
     with boa.env.prank(admin):
-        soracle.set_max_acceleration(DEFAULT_MAX_ACCELERATION + 1)
-        assert soracle.max_acceleration() == DEFAULT_MAX_ACCELERATION + 1
+        soracle.set_max_price_increment(DEFAULT_MAX_PRICE_INCREMENT + 1)
+        assert soracle.max_price_increment() == DEFAULT_MAX_PRICE_INCREMENT + 1
 
         soracle.set_verifier(anne)
         assert soracle.verifier() == anne

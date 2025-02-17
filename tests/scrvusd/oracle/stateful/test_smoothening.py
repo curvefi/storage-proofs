@@ -37,10 +37,12 @@ class SmootheningStateMachine(SoracleStateMachine):
         for x in zip([0] + st_period_timestamps, st_period_timestamps + [PERIOD_CHECK_DURATION])
     ]
 
-    def __init__(self, crvusd, scrvusd, admin, soracle, verifier, soracle_slots, max_acceleration):
+    def __init__(
+        self, crvusd, scrvusd, admin, soracle, verifier, soracle_slots, max_price_increment
+    ):
         super().__init__(crvusd, scrvusd, admin, soracle, verifier, soracle_slots)
 
-        self.max_acceleration = max_acceleration
+        self.max_price_increment = max_price_increment
 
     @invariant(check_during_init=True)
     def smoothed_price(self):
@@ -63,9 +65,9 @@ class SmootheningStateMachine(SoracleStateMachine):
 
                     # Upper bound
                     # In fact, linear approximation is strictly less except new_ts - prev_ts == 1
-                    assert (new_price / prev_price) <= (1.0 + (self.max_acceleration / 10**18)) ** (
-                        new_ts - prev_ts
-                    )
+                    assert (new_price / prev_price) <= (
+                        1.0 + (self.max_price_increment / 10**18)
+                    ) ** (new_ts - prev_ts)
 
                     # TODO: Lower bound
 
@@ -73,14 +75,14 @@ class SmootheningStateMachine(SoracleStateMachine):
 
 
 @pytest.fixture(scope="module", params=[10**11, 10**12, 10**13])
-def max_acceleration(soracle, admin, request):
+def max_price_increment(soracle, admin, request):
     with boa.env.prank(admin):
-        soracle.set_max_acceleration(request.param)
+        soracle.set_max_price_increment(request.param)
     return request.param
 
 
 def test_smoothening_simple(
-    crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier
+    crvusd, scrvusd, admin, max_price_increment, soracle, soracle_price_slots, verifier
 ):
     machine = SmootheningStateMachine(
         # ScrvusdStateMachine
@@ -92,7 +94,7 @@ def test_smoothening_simple(
         verifier=verifier,
         soracle_slots=soracle_price_slots,
         # Smoothening test
-        max_acceleration=max_acceleration,
+        max_price_increment=max_price_increment,
     )
     machine.smoothed_price()
 
@@ -108,7 +110,7 @@ def test_smoothening_simple(
 
 @pytest.mark.slow
 def test_scrvusd_oracle(
-    crvusd, scrvusd, admin, max_acceleration, soracle, soracle_price_slots, verifier
+    crvusd, scrvusd, admin, max_price_increment, soracle, soracle_price_slots, verifier
 ):
     run_state_machine_as_test(
         functools.partial(
@@ -122,7 +124,7 @@ def test_scrvusd_oracle(
             verifier=verifier,
             soracle_slots=soracle_price_slots,
             # Smoothening test
-            max_acceleration=max_acceleration,
+            max_price_increment=max_price_increment,
         ),
         settings=settings(
             max_examples=10,

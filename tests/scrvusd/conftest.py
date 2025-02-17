@@ -5,7 +5,7 @@ import eth_abi
 import eth_utils
 
 
-DEFAULT_MAX_ACCELERATION = 2 * 10**12
+DEFAULT_MAX_PRICE_INCREMENT = 2 * 10**12
 DEFAULT_MAX_V2_DURATION = 6 * 4
 
 
