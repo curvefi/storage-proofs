@@ -1,6 +1,5 @@
 import boa
 import boa_solidity
-import eth_abi
 
 from web3 import Web3
 import json
@@ -8,12 +7,13 @@ import os
 
 from getpass import getpass
 from eth_account import account
-from hexbytes import HexBytes
 
-from proof import generate_proof, submit_proof, PROVER
+from proof import generate_proof, submit_proof
 
 
-NETWORK = f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['WEB3_OPTIMISM_MAINNET_ALCHEMY_API_KEY']}"
+NETWORK = (
+    f"https://opt-mainnet.g.alchemy.com/v2/{os.environ['WEB3_OPTIMISM_MAINNET_ALCHEMY_API_KEY']}"
+)
 
 SCRVUSD = "0x0655977FEb2f289A4aB78af67BAB0d17aAb84367"
 
@@ -32,10 +32,13 @@ l2_web3 = Web3(
 
 def deploy():
     boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").deploy()
-    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy").deploy(10 ** 18, 10 ** 13)
+    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy").deploy(
+        10**18, 10**13
+    )
 
-    prover = boa_solidity.load_partial_solc(
-        "contracts/scrvusd/provers/ScrvusdProver.sol", compiler_args={
+    verifier = boa_solidity.load_partial_solc(
+        "contracts/scrvusd/verifiers/ScrvusdVerifier.sol",
+        compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
             "optimize_runs": 200,
@@ -44,23 +47,23 @@ def deploy():
         },
     ).deploy(boracle.address, soracle.address)
 
-    soracle.set_prover(prover)
+    soracle.set_verifier(verifier)
 
-    return boracle, soracle, prover
+    return boracle, soracle, verifier
 
 
-def prove(boracle, soracle, prover):
+def prove(boracle, soracle, verifier):
     number = boracle.apply()
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_proof(eth_web3, number, log=True)
-    submit_proof(proofs, prover)
-    print(f"Sibmitted proof")
+    submit_proof(proofs, verifier)
+    print("Sibmitted proof")
 
 
-def simulate(boracle, soracle, prover):
+def simulate(boracle, soracle, verifier):
     print(f"Initial price: {soracle.price_v1()}")
-    prove(boracle, soracle, prover)
+    prove(boracle, soracle, verifier)
     print(f"Price just after: {soracle.price_v1()}")
     already = 0
     for i in [1, 2, 5, 10, 60, 3600, 10 * 3600, 86400, 7 * 86400]:
@@ -76,8 +79,8 @@ def account_load(fname):
         return account.Account.from_key(pkey)
 
 
-if __name__ == '__main__':
-    boa.fork(NETWORK, block_identifier='latest')
+if __name__ == "__main__":
+    boa.fork(NETWORK, block_identifier="latest")
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))

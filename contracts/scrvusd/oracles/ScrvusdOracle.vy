@@ -16,12 +16,15 @@ from snekmate.auth import ownable
 initializes: ownable
 exports: ownable.__interface__
 
+
 event PriceUpdate:
     new_price: uint256  # price to achieve
     at: uint256  # timestamp at which price will be achieved
 
+
 event SetProver:
     prover: address
+
 
 struct Interval:
     previous: uint256
@@ -75,12 +78,14 @@ def _price_per_share(ts: uint256) -> uint256:
         return price.future
     if ts <= time.previous:
         return price.previous
-    return (price.previous * (time.future - ts) + price.future * (ts - time.previous)) // (time.future - time.previous)
+    return (price.previous * (time.future - ts) + price.future * (ts - time.previous)) // (
+        time.future - time.previous
+    )
 
 
 @view
 @external
-def pricePerShare(ts: uint256=block.timestamp) -> uint256:
+def pricePerShare(ts: uint256 = block.timestamp) -> uint256:
     """
     @notice Get the price per share (pps) of the vault.
     @dev NOT precise. Price is smoothed over time to eliminate sharp changes.
@@ -92,25 +97,29 @@ def pricePerShare(ts: uint256=block.timestamp) -> uint256:
 
 @view
 @external
-def pricePerAsset(ts: uint256=block.timestamp) -> uint256:
+def pricePerAsset(ts: uint256 = block.timestamp) -> uint256:
     """
     @notice Get the price per asset of the vault.
     @dev NOT precise. Price is smoothed over time to eliminate sharp changes.
     @param ts Timestamp to look price at. Only near future is supported.
     @return The price per share.
     """
-    return 10 ** 36 // self._price_per_share(ts)
+    return 10**36 // self._price_per_share(ts)
 
 
 @view
 @external
-def price_oracle(i: uint256=0) -> uint256:
+def price_oracle(i: uint256 = 0) -> uint256:
     """
     @notice Alias of `pricePerShare` and `pricePerAsset` made for compatability
     @param i 0 for scrvusd per crvusd, 1 for crvusd per scrvusd
     @return Price with 10^18 precision
     """
-    return self._price_per_share(block.timestamp) if i == 0 else 10 ** 36 // self._price_per_share(block.timestamp)
+    return (
+        self._price_per_share(block.timestamp)
+        if i == 0
+        else 10**36 // self._price_per_share(block.timestamp)
+    )
 
 
 @view
@@ -141,20 +150,20 @@ def _unlocked_shares(
 
 
 @view
-def _total_supply(parameters: uint256[ALL_PARAM_CNT], ts: uint256) -> uint256:
+def _total_supply(parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT], ts: uint256) -> uint256:
     # Need to account for the shares issued to the vault that have unlocked.
     # return self.total_supply - self._unlocked_shares()
-    return parameters[ASSETS_PARAM_CNT + 0] -\
-        self._unlocked_shares(
-            parameters[ASSETS_PARAM_CNT + 1],  # full_profit_unlock_date
-            parameters[ASSETS_PARAM_CNT + 2],  # profit_unlocking_rate
-            parameters[ASSETS_PARAM_CNT + 3],  # last_profit_update
-            parameters[ASSETS_PARAM_CNT + 4],  # balance_of_self
-            ts,  # block.timestamp
-        )
+    return parameters[ASSETS_PARAM_CNT + 0] - self._unlocked_shares(
+        parameters[ASSETS_PARAM_CNT + 1],  # full_profit_unlock_date
+        parameters[ASSETS_PARAM_CNT + 2],  # profit_unlocking_rate
+        parameters[ASSETS_PARAM_CNT + 3],  # last_profit_update
+        parameters[ASSETS_PARAM_CNT + 4],  # balance_of_self
+        ts,  # block.timestamp
+    )
+
 
 @view
-def _total_assets(parameters: uint256[ALL_PARAM_CNT]) -> uint256:
+def _total_assets(parameters: uint256[ASSETS_PARAM_CNT + SUPPLY_PARAM_CNT]) -> uint256:
     """
     @notice Total amount of assets that are in the vault and in the strategies.
     """
@@ -176,8 +185,9 @@ def update_price(
     assert msg.sender == self.prover
 
     current_price: uint256 = self._price_per_share(block.timestamp)
-    new_price: uint256 = self._total_assets(_parameters) * 10 ** 18 //\
-        self._total_supply(_parameters, _ts)
+    new_price: uint256 = self._total_assets(_parameters) * 10**18 // self._total_supply(
+        _parameters, _ts
+    )
 
     # Price is always growing and updates are never from future,
     # hence allow only increasing updates
@@ -185,13 +195,15 @@ def update_price(
     if new_price > future_price:
         self.price = Interval(previous=current_price, future=new_price)
 
-        rel_price_change: uint256 = (new_price - current_price) * 10 ** 18 // current_price + 1  # 1 for rounding up
+        rel_price_change: uint256 = (
+            new_price - current_price
+        ) * 10**18 // current_price + 1  # 1 for rounding up
         future_ts: uint256 = block.timestamp + rel_price_change // self.max_acceleration
         self.time = Interval(previous=block.timestamp, future=future_ts)
 
         log PriceUpdate(new_price, future_ts)
-        return new_price * 10 ** 18 // future_price
-    return 10 ** 18
+        return new_price * 10**18 // future_price
+    return 10**18
 
 
 @external
@@ -204,7 +216,7 @@ def set_max_acceleration(_max_acceleration: uint256):
     """
     ownable._check_owner()
 
-    assert 10 ** 8 <= _max_acceleration and _max_acceleration <= 10 ** 18
+    assert 10**8 <= _max_acceleration and _max_acceleration <= 10**18
     self.max_acceleration = _max_acceleration
 
 

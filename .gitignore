@@ -1,1 +1,33 @@
-.idea
+# Byte-compiled Python files
+*.py[cod]
+__pycache__/
+*.so
+
+# Unit test cache files
+tests/unitary/__pycache__/
+tests/unitary/**/*.pyc
+
+# Virtual environment
+env/
+venv/
+.virtualenv/
+
+# Pytest cache
+.pytest_cache/
+
+# Other common Python stuff
+*.log
+*.sqlite3
+*.db
+*.db-journal
+
+# IDEs
+.vscode/
+.idea/
+
+# Solidity packages
+node_modules/
+
+# Log files
+header.txt
+proof.txt

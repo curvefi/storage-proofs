@@ -6,7 +6,7 @@ from hexbytes import HexBytes
 BLOCK_NUMBER = 18578883
 SCRVUSD = "0x0655977FEb2f289A4aB78af67BAB0d17aAb84367"
 
-PROVER = ""
+VERIFIER = ""
 
 ASSET_PARAM_SLOTS = [
     21,  # total_debt
@@ -48,7 +48,9 @@ BLOCK_HEADER = (
 
 def serialize_block(block):
     block_header = [
-        HexBytes("0x") if (isinstance((v := block[k]), int) and v == 0) or v == "0x0" else HexBytes(block[k])
+        HexBytes("0x")
+        if (isinstance((v := block[k]), int) and v == 0) or v == "0x0"
+        else HexBytes(block[k])
         for k in BLOCK_HEADER
         if k in block
     ]
@@ -69,7 +71,9 @@ def generate_proof(eth_web3, block_number=BLOCK_NUMBER, log=False):
     if log:
         print(f"Generating proof for block {block.number}, {block.hash.hex()}")
     block_header_rlp = serialize_block(block)
-    proof_rlp = serialize_proofs(eth_web3.eth.get_proof(SCRVUSD, ASSET_PARAM_SLOTS + SUPPLY_PARAM_SLOTS, block_number))
+    proof_rlp = serialize_proofs(
+        eth_web3.eth.get_proof(SCRVUSD, ASSET_PARAM_SLOTS + SUPPLY_PARAM_SLOTS, block_number)
+    )
 
     if log:
         with open("header.txt", "w") as f:
@@ -80,7 +84,7 @@ def generate_proof(eth_web3, block_number=BLOCK_NUMBER, log=False):
     return block_header_rlp.hex(), proof_rlp.hex()
 
 
-def submit_proof(proofs, prover=PROVER):
+def submit_proof(proofs, verifier=VERIFIER):
     if proofs:
         block_header_rlp, proof_rlp = proofs
     else:
@@ -89,8 +93,24 @@ def submit_proof(proofs, prover=PROVER):
         with open("proof.txt") as f:
             proof_rlp = f.read()
 
-    if isinstance(prover, str):
+    if isinstance(verifier, str):
         # do web3py
         pass
     else:
-        prover.prove(bytes.fromhex(block_header_rlp), bytes.fromhex(proof_rlp))
+        verifier.prove(bytes.fromhex(block_header_rlp), bytes.fromhex(proof_rlp))
+
+
+def scrvusd_pps(w3_eth, block_number):
+    scrvusd_contract = w3_eth.eth.contract(
+        address=SCRVUSD,
+        abi=[
+            {
+                "name": "pricePerShare",
+                "type": "function",
+                "inputs": [],
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+            }
+        ],
+    )
+    return scrvusd_contract.functions.pricePerShare().call(block_identifier=block_number)

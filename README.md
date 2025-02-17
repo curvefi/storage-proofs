@@ -62,23 +62,42 @@ The prover needs to be online to provide the proof in a timely manner, if the pr
 ## Contributing
 
 ### Install
-Install dependencies:
-```shell
-pip install git+https://github.com/z80dev/boa-solidity.git
-pip install -r requirements.in
+Install python dependencies using [uv](https://github.com/astral-sh/uv):
 
+```shell
+uv sync
+```
+
+To enter the python environment:
+
+```shell
+source .venv/bin/activate
+```
+
+Solidity dependencies:
+    
+```shell
 solc-select install 0.8.18
 solc-select use 0.8.18
 
 npm install solidity-rlp@2.0.7
 ```
 
-Install only `contracts/` folder from xdao:
+Completely sync submodules and remove all unnecessary files:
 ```shell
-echo "contracts/" >> .git/modules/contracts/xdao/info/sparse-checkout
-rm -rf contracts/xdao
-git submodule update
-git submodule sync
+git submodule update --init --recursive --depth 1
+find contracts/xdao -mindepth 1 -maxdepth 1 ! -name 'contracts' -exec rm -rf {} +
+find tests/scrvusd/contracts/scrvusd -depth -mindepth 1 ! -wholename 'tests/scrvusd/contracts/scrvusd/contracts/yearn/VaultV3.vy' -type f -delete
+find tests/scrvusd/contracts/scrvusd -depth -type d -empty -delete
+```
+
+### Test
+```shell
+pytest .
+```
+Forked and slow stateful tests are disabled by default. To include them, use the --forked or --slow flags. For example, to run all tests:
+```shell
+pytest --forked --slow
 ```
 
 ### Run
