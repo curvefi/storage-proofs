@@ -4,7 +4,7 @@
 @notice Handles veCRV balance (mainly for boosting)
 @license MIT
 @author curve.fi
-@custom:version 0.1.0
+@custom:version 1.0.0
 @custom:security security@curve.fi
 """
 
@@ -67,11 +67,13 @@ delegation_from: HashMap[address, address]
 delegation_to: HashMap[address, address]
 last_delegation: HashMap[address, uint256]
 
+last_block_number: public(uint256)
+
 name: public(constant(String[64])) = "Vote-escrowed CRV"
 symbol: public(constant(String[32])) = "veCRV"
 decimals: public(constant(uint256)) = 18
 
-version: public(constant(String[8])) = "0.1.0"
+version: public(constant(String[8])) = "1.0.0"
 
 
 @deploy
@@ -101,7 +103,7 @@ def _balanceOf(user: address, timestamp: uint256) -> uint256:
 
 @external
 @view
-def delegation_target(_from: address) -> address:
+def delegated(_from: address) -> address:
     """
     @notice Get contract balance being delegated to
     @param _from Address of delegator
@@ -115,7 +117,7 @@ def delegation_target(_from: address) -> address:
 
 @external
 @view
-def delegation_source(_to: address) -> address:
+def delegator(_to: address) -> address:
     """
     @notice Get contract delegating balance to `_to`
     @param _to Address of delegated to
@@ -209,6 +211,7 @@ def update_balance(
     _user_point_epoch: uint256,
     _user_point_history: Point,
     _locked: LockedBalance,
+    _block_number: uint256,
 ):
     """
     @notice Update user balance
@@ -218,22 +221,26 @@ def update_balance(
     @param _locked `_user`s locked balance
     """
     access_control._check_role(BALANCE_VERIFIER, msg.sender)
-    assert (
-        self.user_point_epoch[_user] <= _user_point_epoch
-        and self.user_point_history[_user][_user_point_epoch].ts <= _user_point_history.ts
-    ), "Outdated update"
+    assert self.last_block_number <= _block_number, "Outdated update"
+    #    assert (
+    #        self.user_point_epoch[_user] <= _user_point_epoch
+    #        and self.user_point_history[_user][_user_point_epoch].ts <= _user_point_history.ts
+    #    ), "Outdated update"
 
     self.user_point_epoch[_user] = _user_point_epoch
     self.user_point_history[_user][_user_point_epoch] = _user_point_history
-
     self.locked[_user] = _locked
-
     log UpdateBalance(_user, _user_point_epoch)
+
+    self.last_block_number = _block_number
 
 
 @external
 def update_total(
-    _epoch: uint256, _point_history: Point, _slope_changes: DynArray[int128, SLOPE_CHANGES_CNT]
+    _epoch: uint256,
+    _point_history: Point,
+    _slope_changes: DynArray[int128, SLOPE_CHANGES_CNT],
+    _block_number: uint256,
 ):
     """
     @notice Update VotingEscrow global values
@@ -242,9 +249,10 @@ def update_total(
     @param _slope_changes Slope changes for upcoming epochs
     """
     access_control._check_role(TOTAL_VERIFIER, msg.sender)
-    assert (
-        self.epoch <= _epoch and self.point_history[_epoch].ts <= _point_history.ts
-    ), "Outdated update"
+    assert self.last_block_number <= _block_number, "Outdated update"
+    #    assert (
+    #        self.epoch <= _epoch and self.point_history[_epoch].ts <= _point_history.ts
+    #    ), "Outdated update"
 
     self.epoch = _epoch
     self.point_history[_epoch] = _point_history
@@ -254,6 +262,8 @@ def update_total(
         self.slope_changes[start_time + WEEK * i] = _slope_changes[i]
 
     log UpdateTotal(_epoch)
+
+    self.last_block_number = _block_number
 
 
 @external
@@ -266,10 +276,10 @@ def update_delegation(_from: address, _to: address, _block_number: uint256):
     @param _block_number Block number at which delegation holds true
     """
     access_control._check_role(DELEGATION_VERIFIER, msg.sender)
-    assert self.last_delegation[_from] <= _block_number, "Outdated update"
+    assert self.last_block_number <= _block_number, "Outdated update"
 
     self.delegation_from[_from] = _to
     self.delegation_to[_to] = _from
-    self.last_delegation[_from] = _block_number
-
     log Delegate(_from, _to)
+
+    self.last_block_number = _block_number
