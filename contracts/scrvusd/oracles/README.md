@@ -1,7 +1,5 @@
 ## V0
 Something like _read price from Ethereum_.
-**Known issues**:
-- Smoothening is not scaled to current price
 
 ## V1
 Simulates price for ongoing period.
@@ -11,7 +9,7 @@ Simulates price for ongoing period.
 Simulates equal gain over periods.
 
 ### Alternative version
-Not tested
+Saving alternative possible solution. Not tested.
 ```vyper
 @view
 def _obtain_price_params(parameters_ts: uint256) -> PriceParams:
