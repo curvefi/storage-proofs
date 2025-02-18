@@ -34,11 +34,6 @@ The system relies on the following actors:
 - A smart contract that will be called by the prover (from now on the verifier) that will verify that the data provided alongside their proof.
 - A smart contract that will provide the current price of scrvUSD, given the growth rate of the vault provided by the prover and verified by the verifier, to be used by the stableswap-ng pool on the target chain.
 
-Depending on the type of chain the proof (and hence its verification process) will be different:
-- On OP Stack-based chains the verifier will expect a blockhash (to be matched with the one available in a precompile) and a state proof of the memory slots relevant to the growth rate computation.
-- On Taiko Stack-based chains the verifier will expect the blocknumber and a state proof of the memory slots relevant to the growth rate computation.
-- On all other chains the prover will provide the same data as for the OP Stack, and relevant data to verify the proof will be bridged from Optimism using L0.
-
 Here's the flowchart of the system for an OP Stack-based chain:
 ```mermaid
 flowchart TD
