@@ -2,7 +2,6 @@ import pytest
 import boa
 
 from tests.scrvusd.conftest import DEFAULT_MAX_PRICE_INCREMENT, DEFAULT_MAX_V2_DURATION
-from tests.scrvusd.oracle.unitary.test_v1 import test_update_price  # noqa: F401  # reusing test
 
 
 @pytest.fixture(scope="module")
@@ -85,5 +84,43 @@ def test_update_profit_max_unlock_time(soracle, verifier, anne):
         # "Breaking" resubmit at same block
         soracle.update_profit_max_unlock_time(
             6 * 86400,  # new value
+            10,  # block number
+        )
+
+
+def test_update_price(soracle, verifier, anne):
+    ts = boa.env.evm.patch.timestamp
+    price_1_5_parameters = [3, 0, 2, ts + 7 * 86400, 0, 0, 0]
+    price_0_5_parameters = [2, 0, 3, ts + 7 * 86400, 0, 0, 0]
+
+    # Not available to a third party
+    with boa.env.prank(anne):
+        with boa.reverts():
+            soracle.update_price(
+                price_1_5_parameters,
+                ts + 100,  # timestamp
+                10,  # block number
+            )
+
+    with boa.env.prank(verifier):
+        soracle.update_price(
+            price_1_5_parameters,
+            ts + 100,  # timestamp
+            10,  # block number
+        )
+        assert soracle.last_block_number() == 10
+
+        # Linearizability by block number
+        with boa.reverts():
+            soracle.update_price(
+                price_1_5_parameters,
+                ts + 101,  # timestamp
+                8,  # block number
+            )
+
+        # "Breaking" resubmit at same block
+        soracle.update_price(
+            price_0_5_parameters,
+            ts + 99,  # timestamp
             10,  # block number
         )
