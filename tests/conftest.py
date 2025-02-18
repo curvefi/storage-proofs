@@ -7,10 +7,6 @@ boa.env.enable_fast_mode()
 EMPTY_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000"
 WEEK = 7 * 86400
 
-pytest_plugins = [
-    "shared.forked.fixtures",
-]
-
 
 def pytest_addoption(parser):
     parser.addoption(
