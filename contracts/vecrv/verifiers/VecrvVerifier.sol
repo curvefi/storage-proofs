@@ -32,10 +32,10 @@ contract VecrvVerifier is VecrvVerifierCore {
     ) external {
         RLPReader.RLPItem[] memory proofs = _proof_rlp.toRlpItem().toList();
         require(proofs.length >= 1, "Invalid number of proofs");
-        bytes32 storage_root = _extractAccountStorageRoot(_block_header_rlp, proofs[0]);
+        (bytes32 storage_root, uint256 block_number) = _extractAccountStorageRoot(_block_header_rlp, proofs[0]);
 
-        _updateTotal(storage_root, proofs[1].toList());
-        _updateBalance(_user, storage_root, proofs[2].toList());
+        _updateTotal(storage_root, block_number, proofs[1].toList());
+        _updateBalance(_user, storage_root, block_number, proofs[2].toList());
     }
 
     /// @param _user User to verify balance for
@@ -51,8 +51,8 @@ contract VecrvVerifier is VecrvVerifierCore {
         bytes32 state_root = IBlockHashOracle(BLOCK_HASH_ORACLE).get_state_root(_block_number);
         bytes32 storage_root = _extractAccountStorageRoot(state_root, proofs[0]);
 
-        _updateTotal(storage_root, proofs[1].toList());
-        _updateBalance(_user, storage_root, proofs[2].toList());
+        _updateTotal(storage_root, _block_number, proofs[1].toList());
+        _updateBalance(_user, storage_root, _block_number, proofs[2].toList());
     }
 
     /// @param _block_header_rlp The RLP-encoded block header
@@ -63,9 +63,9 @@ contract VecrvVerifier is VecrvVerifierCore {
     ) external {
         RLPReader.RLPItem[] memory proofs = _proof_rlp.toRlpItem().toList();
         require(proofs.length >= 1, "Invalid number of proofs");
-        bytes32 storage_root = _extractAccountStorageRoot(_block_header_rlp, proofs[0]);
+        (bytes32 storage_root, uint256 block_number) = _extractAccountStorageRoot(_block_header_rlp, proofs[0]);
 
-        _updateTotal(storage_root, proofs[1].toList());
+        _updateTotal(storage_root, block_number, proofs[1].toList());
     }
 
     /// @param _block_number Number of the block to use state root hash
@@ -79,19 +79,19 @@ contract VecrvVerifier is VecrvVerifierCore {
         bytes32 state_root = IBlockHashOracle(BLOCK_HASH_ORACLE).get_state_root(_block_number);
         bytes32 storage_root = _extractAccountStorageRoot(state_root, proofs[0]);
 
-        _updateTotal(storage_root, proofs[1].toList());
+        _updateTotal(storage_root, _block_number, proofs[1].toList());
     }
 
     function _extractAccountStorageRoot(
         bytes memory _block_header_rlp,
         RLPReader.RLPItem memory account_proof
-    ) internal returns (bytes32) {
+    ) internal returns (bytes32, uint256) {
         Verifier.BlockHeader memory block_header = Verifier.parseBlockHeader(_block_header_rlp);
         require(block_header.hash != bytes32(0), "Invalid blockhash");
         require(
             block_header.hash == IBlockHashOracle(BLOCK_HASH_ORACLE).get_block_hash(block_header.number),
             "Blockhash mismatch"
         );
-        return _extractAccountStorageRoot(block_header.stateRootHash, account_proof);
+        return (_extractAccountStorageRoot(block_header.stateRootHash, account_proof), block_header.number);
     }
 }

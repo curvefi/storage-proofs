@@ -22,13 +22,15 @@ interface IVecrvOracle {
         address _user,
         uint256 _user_point_epoch,
         Point memory _user_point_history,
-        LockedBalance memory _locked
+        LockedBalance memory _locked,
+        uint256 block_number
     ) external;
 
     function update_total(
         uint256 _epoch,
         Point memory _point_history,
-        int128[] memory _slope_changes
+        int128[] memory _slope_changes,
+        uint256 block_number
     ) external;
 }
 
@@ -71,6 +73,7 @@ abstract contract VecrvVerifierCore {
     /// @dev Update total parameters with proofs
     function _updateTotal(
         bytes32 storageRoot,
+        uint256 block_number,
         RLPReader.RLPItem[] memory proofs
     ) internal {
         require(proofs.length >= SLOPE_CHANGES_PROOF_I + MIN_SLOPE_CHANGES_CNT, "Invalid number of total proofs");
@@ -100,7 +103,8 @@ abstract contract VecrvVerifierCore {
         return IVecrvOracle(VE_ORACLE).update_total(
             epoch,
             point_history,
-            slope_changes
+            slope_changes,
+            block_number
         );
     }
 
@@ -108,6 +112,7 @@ abstract contract VecrvVerifierCore {
     function _updateBalance(
         address user,
         bytes32 storageRoot,
+        uint256 block_number,
         RLPReader.RLPItem[] memory proofs
     ) internal {
         require(proofs.length == LOCKED_BALANCE_PROOF_I + 2, "Invalid number of balance proofs");
@@ -137,7 +142,8 @@ abstract contract VecrvVerifierCore {
             user,
             user_point_epoch,
             user_point_history,
-            locked
+            locked,
+            block_number
         );
     }
 
