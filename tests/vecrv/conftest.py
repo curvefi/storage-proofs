@@ -36,3 +36,13 @@ def delegate(admin):
 @pytest.fixture(scope="module")
 def delegate_slots():
     return functools.partial(get_delegation_slots, boa.env.evm.chain.chain_id)
+
+
+@pytest.fixture(scope="module")
+def delegation_verifier():
+    return boa.env.generate_address()
+
+
+@pytest.fixture(scope="module")
+def vecrv_verifier():
+    return boa.env.generate_address()

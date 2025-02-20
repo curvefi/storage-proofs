@@ -278,8 +278,12 @@ def update_delegation(_from: address, _to: address, _block_number: uint256):
     access_control._check_role(DELEGATION_VERIFIER, msg.sender)
     assert self.last_block_number <= _block_number, "Outdated update"
 
+    delegated: address = self.delegation_from[_from]
+    if delegated != empty(address):  # revoke delegation
+        self.delegation_to[delegated] = empty(address)
     self.delegation_from[_from] = _to
-    self.delegation_to[_to] = _from
+    if _to != empty(address):
+        self.delegation_to[_to] = _from
     log Delegate(_from, _to)
 
     self.last_block_number = _block_number
