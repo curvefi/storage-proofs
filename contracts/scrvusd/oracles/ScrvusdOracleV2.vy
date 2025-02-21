@@ -134,7 +134,7 @@ def price_v2(_i: uint256 = 0) -> uint256:
     @dev Uses assumption that crvUSD gains same rewards.
     @param _i 0 (default) for `pricePerShare()` and 1 for `pricePerAsset()`
     """
-    return self._price_v2() if _i == 0 else 10**36 // self._price_v1()
+    return self._price_v2() if _i == 0 else 10**36 // self._price_v2()
 
 
 @view
