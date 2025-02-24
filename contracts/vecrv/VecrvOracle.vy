@@ -62,7 +62,7 @@ user_point_history: public(HashMap[address, HashMap[uint256, Point]])
 locked: public(HashMap[address, LockedBalance])
 slope_changes: public(HashMap[uint256, int128])
 
-# [chain id][address from][address to]
+# [address from][address to]
 delegation_from: HashMap[address, address]
 delegation_to: HashMap[address, address]
 last_delegation: HashMap[address, uint256]
