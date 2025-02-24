@@ -130,6 +130,16 @@ def delegator(_to: address) -> address:
 
 
 @view
+def _get_user_after_delegation(_user: address) -> address:
+    user: address = self.delegation_to[_user]
+    if user == empty(address):
+        if self.delegation_from[_user] not in [empty(address), _user]:  # only delegation out
+            return empty(address)
+        user = _user
+    return user
+
+
+@view
 @external
 def balanceOf(_user: address, _timestamp: uint256 = block.timestamp) -> uint256:
     """
@@ -138,11 +148,9 @@ def balanceOf(_user: address, _timestamp: uint256 = block.timestamp) -> uint256:
     @param _timestamp Timestamp for the balance check
     @return Balance of user
     """
-    if not self.delegation_from[_user] in [empty(address), _user]:
-        return 0
-    user: address = self.delegation_to[_user]
+    user: address = self._get_user_after_delegation(_user)
     if user == empty(address):
-        user = _user
+        return 0
     return self._balanceOf(user, _timestamp)
 
 
@@ -179,14 +187,17 @@ def totalSupply(_timestamp: uint256 = block.timestamp) -> uint256:
 
 @external
 @view
-def get_last_user_slope(addr: address) -> int128:
+def get_last_user_slope(_addr: address) -> int128:
     """
     @notice Get the most recently recorded rate of voting power decrease for `addr`
-    @param addr Address of the user wallet
+    @param _addr Address of the user wallet
     @return Value of the slope
     """
-    uepoch: uint256 = self.user_point_epoch[addr]
-    return self.user_point_history[addr][uepoch].slope
+    user: address = self._get_user_after_delegation(_addr)
+    if user == empty(address):
+        return 0
+    uepoch: uint256 = self.user_point_epoch[user]
+    return self.user_point_history[user][uepoch].slope
 
 
 @external
@@ -197,7 +208,10 @@ def locked__end(_addr: address) -> uint256:
     @param _addr User wallet
     @return Epoch time of the lock end
     """
-    return self.locked[_addr].end
+    user: address = self._get_user_after_delegation(_addr)
+    if user == empty(address):
+        return 0
+    return self.locked[user].end
 
 
 ### Verifiers' update methods
