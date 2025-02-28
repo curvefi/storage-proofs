@@ -3,7 +3,7 @@ import pytest
 
 from tests.conftest import WEEK, DAY
 
-CHAIN_ID = 333
+CHAIN_ID = boa.env.evm.chain.chain_id
 DEFAULT_TTL = [
     WEEK,
     WEEK,

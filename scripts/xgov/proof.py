@@ -1,12 +1,13 @@
 import os
 
 import eth_abi
+import eth_utils
 import rlp
 from eth.hash import keccak256
 from hexbytes import HexBytes
 
 ETH_NETWORK = f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY']}"  # ALTER
-L1_NETWORK = f"https://bscrpc.com"  # ALTER
+L1_NETWORK = "https://bscrpc.com"  # ALTER
 
 AGENT = 1  # ALTER
 CHAIN_ID = 56  # ALTER
@@ -62,16 +63,15 @@ def serialize_block(block):
 def serialize_proofs(proofs):
     account_proof = list(map(rlp.decode, map(HexBytes, proofs["accountProof"])))
     storage_proofs = [
-        list(map(rlp.decode, map(HexBytes, proof["proof"])))
-        for proof in proofs["storageProof"]
+        list(map(rlp.decode, map(HexBytes, proof["proof"]))) for proof in proofs["storageProof"]
     ]
     return rlp.encode([account_proof, *storage_proofs])
 
 
-def hashmap(eth_web3, slot, value, type):
+def hashmap(slot, value, type):
     if isinstance(slot, HexBytes):
         slot = int(slot.hex(), 16)
-    return eth_web3.keccak(eth_abi.encode([f"(uint256,{type})"], [[slot, value]]))
+    return int.from_bytes(eth_utils.keccak(eth_abi.encode([f"(uint256,{type})"], [[slot, value]])))
 
 
 def generate_message_digest_proof(
@@ -87,21 +87,17 @@ def generate_message_digest_proof(
         print(f"Generating proof for block {block.number}, {block.hash.hex()}")
     block_header_rlp = serialize_block(block)
     message_digest_slot = hashmap(
-        eth_web3,
-        hashmap(eth_web3, hashmap(eth_web3, 8, agent, "uint256"), chain_id, "uint256"),
+        hashmap(hashmap(8, agent, "uint256"), chain_id, "uint256"),
         nonce,
         "uint256",
     )
     deadline_slot = hashmap(
-        eth_web3,
-        hashmap(eth_web3, hashmap(eth_web3, 9, agent, "uint256"), chain_id, "uint256"),
+        hashmap(hashmap(9, agent, "uint256"), chain_id, "uint256"),
         nonce,
         "uint256",
     )
     proof_rlp = serialize_proofs(
-        eth_web3.eth.get_proof(
-            BROADCASTER, [message_digest_slot, deadline_slot], block_number
-        )
+        eth_web3.eth.get_proof(BROADCASTER, [message_digest_slot, deadline_slot], block_number)
     )
 
     with open("header.txt", "w") as f:
