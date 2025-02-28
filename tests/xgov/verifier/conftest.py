@@ -9,7 +9,7 @@ from scripts.xgov.proof import hashmap
 def verifier(admin, boracle, relayer):
     with boa.env.prank(admin):
         deployer = boa_solidity.load_partial_solc(
-            "tests/xgov/contracts/curve-xdao/contracts/verifiers/MessageDigestVerifier.sol",
+            "contracts/xgov/verifiers/MessageDigestVerifier.sol",
             compiler_args={
                 "optimize": True,
                 "optimize_runs": 200,
