@@ -1,21 +1,15 @@
-import os
-
 import eth_abi
 import eth_utils
 import rlp
 from eth.hash import keccak256
 from hexbytes import HexBytes
 
-ETH_NETWORK = f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY']}"  # ALTER
-L1_NETWORK = "https://bscrpc.com"  # ALTER
 
 AGENT = 1  # ALTER
 CHAIN_ID = 56  # ALTER
 NONCE = 0  # ALTER
 
 BLOCK_NUMBER = None  # ALTER: last applied block number
-
-POA = CHAIN_ID in (56,)
 
 BROADCASTER = "0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc"
 
