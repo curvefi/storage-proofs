@@ -6,7 +6,7 @@ import rlp
 from scripts.xgov.proof import serialize_proofs
 from tests.shared.verifier import get_block_and_proofs
 from tests.xgov.conftest import CHAIN_ID
-from tests.xgov.verifier.conftest import MESSAGES
+from tests.xgov.verifier.unitary.conftest import MESSAGES
 
 
 @pytest.mark.parametrize("i", [0, 1, 2])
