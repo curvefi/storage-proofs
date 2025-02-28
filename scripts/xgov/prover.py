@@ -23,9 +23,7 @@ VERSION = {
 
 AGENT = 1  # ALTER
 NONCE = 0  # ALTER
-MESSAGES = [
-    ("0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683", bytes("test", "utf-8"))
-]  # ALTER
+MESSAGES = [("0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683", bytes("test", "utf-8"))]  # ALTER
 
 eth_web3 = Web3(provider=Web3.HTTPProvider(ETH_NETWORK))
 l2_web3 = Web3(provider=Web3.HTTPProvider(L2_NETWORK))
@@ -80,7 +78,7 @@ class XGov:
                     self.verifier.verifyMessagesByStateRoot(
                         agent, messages, block_number, bytes.fromhex(proofs[1])
                     )
-        print(f"Submitted proof")
+        print("Submitted proof")
 
     def _verify_messages_needed(self, agent):
         eth_nonce = self.broadcaster.functions.nonce(agent).call()
@@ -92,7 +90,7 @@ def get_agent():
     try:
         agent = int(sys.argv[-1])
         assert agent in [1, 2, 4]
-    except:
+    except Exception:
         agent = AGENT
     return agent
 
