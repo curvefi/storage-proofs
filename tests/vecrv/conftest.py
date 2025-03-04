@@ -29,6 +29,7 @@ def delegate(admin):
     with boa.env.prank(admin):
         return boa.load(
             "contracts/vecrv/VecrvDelegate.vy",
+            admin,
             override_address="0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",
         )  # TODO deployment address
 

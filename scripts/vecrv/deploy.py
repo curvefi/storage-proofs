@@ -5,6 +5,7 @@ from getpass import getpass
 import boa
 import boa_solidity
 from eth_account import account
+from vyper.utils import keccak256
 from hexbytes import HexBytes
 from proof import (
     generate_balance_proof,
@@ -13,6 +14,7 @@ from proof import (
 from web3 import Web3
 
 NETWORK = "https://rpc.frax.com"
+DEPLOYER = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
 
 eth_web3 = Web3(
     provider=Web3.HTTPProvider(
@@ -25,6 +27,43 @@ l2_web3 = Web3(
         NETWORK,
     ),
 )
+
+
+def get_delegate_bytecode(deployer):
+    contract = boa.load_partial("contracts/vecrv/VecrvDelegate.vy")
+    args = boa.util.abi.abi_encode("(address)", (deployer,))
+    bytecode = contract.compiler_data.bytecode + args
+    return bytecode
+
+
+def delegate_address_mine_cmd(deployer=DEPLOYER):
+    pattern = "de1e6a7eXXXXXXXXXXXXXXXXXXXXXXXXXXX4ec84"
+    bytecode = get_delegate_bytecode(deployer)
+    code_hash = keccak256(bytecode).hex()
+    cmd = f"""# Clone and build the miner:
+    git clone https://github.com/HrikB/createXcrunch.git
+    cd createXcrunch
+    cargo build --release
+
+    # Run the miner:
+    ./target/release/createxcrunch create2 \\
+        --caller {deployer} \\
+        --code-hash {code_hash} \\
+        --output {pattern[0:10]}.txt \\
+        --matching {pattern}
+        """
+    print(cmd)
+
+
+def deploy_delegate(deployer=DEPLOYER):
+    createx = boa.from_etherscan(
+        "0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed",
+        "CreateX",
+        api_key=os.environ["ETHERSCAN_API_KEY"],
+    )
+    salt = bytes.fromhex("71f718d3e4d1449d1502a6a7595eb84ebccb16830035e01cd7b7b2fd03b8d49e")
+    delegate_address = createx.deployCreate2(salt, get_delegate_bytecode(deployer))
+    print(f"Deployed at {delegate_address}")
 
 
 def deploy():
@@ -81,7 +120,7 @@ def verify_total(boracle, verifier):
     print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_total_proof(eth_web3, number, log=True)
-    verifier.verifyTotalByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
+    verifier.verifyTotalByBlockHash(HexBytes(proofs[0]), HexBytes(proofs[1]))
     print("Sibmitted proof")
 
 
@@ -115,13 +154,8 @@ def account_load(fname):
 
 
 if __name__ == "__main__":
-    # deploy on ETH
-    # delegate = boa.load_partial("contracts/vecrv/VecrvDelegate.vy").deploy()
-
     boa.fork(NETWORK, block_identifier="latest")
-    boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
+    boa.env.eoa = DEPLOYER
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
-    boracle, voracle, verifier, d_verifier = deploy()
-    user = "0x52f541764E6e90eeBc5c21Ff570De0e2D63766B6"
-    simulate(user, boracle, voracle, verifier)
+    deploy_delegate()

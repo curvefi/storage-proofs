@@ -36,8 +36,9 @@ version: public(constant(String[8])) = "0.0.1"
 
 
 @deploy
-def __init__():
+def __init__(_owner: address):
     ownable.__init__()
+    ownable._transfer_ownership(_owner)
 
 
 @external
