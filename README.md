@@ -16,7 +16,7 @@
 ## About the Project
 
 ### Context
-At Curve, we offer a Savings Vault for crvUSD, an ERC4626 token that allows earning
+At Curve, we offer a [Savings Vault](https://github.com/curvefi/scrvusd/blob/main/contracts/yearn/VaultV3.vy) for crvUSD, an ERC4626 token that allows earning
 a "risk-free" interest rate on the crvUSD stablecoin.
 
 When bridging scrvUSD cross-chain, the token loses its ERC4626 capabilities and becomes
