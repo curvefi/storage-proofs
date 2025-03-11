@@ -30,8 +30,8 @@ def delegate(admin):
         return boa.load(
             "contracts/vecrv/VecrvDelegate.vy",
             admin,
-            override_address="0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",
-        )  # TODO deployment address
+            override_address="0xde1e6A7E8297076f070E857130E593107A0E0cF5",
+        )
 
 
 @pytest.fixture(scope="module")

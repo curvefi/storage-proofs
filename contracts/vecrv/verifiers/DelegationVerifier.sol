@@ -21,7 +21,7 @@ contract DelegationVerifier {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    address private constant VE_DELEGATE = 0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2;
+    address private constant VE_DELEGATE = 0xde1e6A7E8297076f070E857130E593107A0E0cF5;
     bytes32 private constant VE_DELEGATE_HASH = keccak256(abi.encodePacked(VE_DELEGATE));
 
     address public immutable VE_ORACLE;

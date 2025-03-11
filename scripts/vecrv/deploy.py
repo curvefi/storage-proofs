@@ -68,10 +68,9 @@ def deploy_delegate(deployer=DEPLOYER):
 
 def deploy():
     boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").at(
-        "0xbD2775B8eADaE81501898eB208715f0040E51882"
+        "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412"
     )
-    voracle = boa.load_partial("contracts/vecrv/oracles/VecrvOracle.vy").deploy()
-    print("voracle abi", voracle.abi)
+    voracle = boa.load_partial("contracts/vecrv/VecrvOracle.vy").deploy()
 
     verifier = boa_solidity.load_partial_solc(
         "contracts/vecrv/verifiers/VecrvVerifier.sol",
@@ -106,9 +105,18 @@ def deploy():
     return boracle, voracle, verifier, d_verifier
 
 
-def verify(user, boracle, verifier):
-    number = boracle.apply()
-    print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
+def verify(user, boracle, verifier, apply=False):
+    if apply:
+        number = boracle.apply()
+        print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
+    else:
+        l1_block = boa.from_etherscan(
+            "0x4200000000000000000000000000000000000015",
+            "L1Block",
+            uri="https://api-optimistic.etherscan.io/api",
+            api_key=os.environ["OPTIMISTIC_ETHERSCAN_TOKEN"],
+        )
+        number = l1_block.number()
 
     proofs = generate_balance_proof(user, eth_web3, number, log=True)
     verifier.verifyBalanceByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
@@ -158,4 +166,6 @@ if __name__ == "__main__":
     boa.env.eoa = DEPLOYER
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
-    deploy_delegate()
+    # deploy_delegate()
+    boracle, voracle, verifier, d_verifier = deploy()
+    simulate("0x989AEb4d175e16225E39E87d0D97A3360524AD80", boracle, voracle, verifier)
