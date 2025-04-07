@@ -10,22 +10,22 @@ from hexbytes import HexBytes
 from proof import (
     generate_balance_proof,
     generate_total_proof,
+    generate_delegation_proof,
 )
 from web3 import Web3
 
 NETWORK = "https://rpc.frax.com"
 DEPLOYER = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
 
+ETH_NETWORK = (
+    f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY']}"
+)
 eth_web3 = Web3(
-    provider=Web3.HTTPProvider(
-        f"https://eth-mainnet.alchemyapi.io/v2/{os.environ['WEB3_ETHEREUM_MAINNET_ALCHEMY_API_KEY']}",
-    ),
+    provider=Web3.HTTPProvider(ETH_NETWORK),
 )
 
 l2_web3 = Web3(
-    provider=Web3.HTTPProvider(
-        NETWORK,
-    ),
+    provider=Web3.HTTPProvider(NETWORK),
 )
 
 
@@ -64,6 +64,20 @@ def deploy_delegate(deployer=DEPLOYER):
     salt = bytes.fromhex("71f718d3e4d1449d1502a6a7595eb84ebccb16830035e01cd7b7b2fd03b8d49e")
     delegate_address = createx.deployCreate2(salt, get_delegate_bytecode(deployer))
     print(f"Deployed at {delegate_address}")
+
+
+def allow_delegation(chain_id, allow=True):
+    delegate = boa.load_partial("contracts/vecrv/VecrvDelegate.vy").at(
+        "0xde1e6A7E8297076f070E857130E593107A0E0cF5"
+    )
+    delegate.allow_delegation(chain_id, allow)
+
+
+def delegate(chain_id, to):
+    delegate = boa.load_partial("contracts/vecrv/VecrvDelegate.vy").at(
+        "0xde1e6A7E8297076f070E857130E593107A0E0cF5"
+    )
+    delegate.delegate(chain_id, to)
 
 
 def deploy():
@@ -105,29 +119,29 @@ def deploy():
     return boracle, voracle, verifier, d_verifier
 
 
-def verify(user, boracle, verifier, apply=False):
-    if apply:
-        number = boracle.apply()
-        print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
-    else:
-        l1_block = boa.from_etherscan(
-            "0x4200000000000000000000000000000000000015",
-            "L1Block",
-            uri="https://api-optimistic.etherscan.io/api",
-            api_key=os.environ["OPTIMISTIC_ETHERSCAN_TOKEN"],
-        )
-        number = l1_block.number()
+def verify_delegation(chain_id, user, boracle, d_verifier, block_number=None):
+    block_number = block_number or boracle.apply()
+    print(f"Applied block: {block_number}, {boracle.get_block_hash(block_number).hex()}")
+
+    proofs = generate_delegation_proof(chain_id, user, eth_web3, block_number, log=True)
+    d_verifier.verifyDelegationByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
+    print("Sibmitted proof")
+
+
+def verify(user, boracle, verifier, block_number=None):
+    number = block_number or boracle.apply()
+    print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
 
     proofs = generate_balance_proof(user, eth_web3, number, log=True)
     verifier.verifyBalanceByBlockHash(user, HexBytes(proofs[0]), HexBytes(proofs[1]))
     print("Sibmitted proof")
 
 
-def verify_total(boracle, verifier):
-    number = boracle.apply()
-    print(f"Applied block: {number}, {boracle.get_block_hash(number).hex()}")
+def verify_total(boracle, verifier, block_number=None):
+    block_number = block_number or boracle.apply()
+    print(f"Applied block: {block_number}, {boracle.get_block_hash(block_number).hex()}")
 
-    proofs = generate_total_proof(eth_web3, number, log=True)
+    proofs = generate_total_proof(eth_web3, block_number=block_number, log=True)
     verifier.verifyTotalByBlockHash(HexBytes(proofs[0]), HexBytes(proofs[1]))
     print("Sibmitted proof")
 
@@ -162,10 +176,45 @@ def account_load(fname):
 
 
 if __name__ == "__main__":
+    # ETH side
+    # boa.fork(ETH_NETWORK, block_identifier="latest")
+    # boa.set_network_env(ETH_NETWORK)
+    # boa.env.eoa = DEPLOYER
+    # boa.env.add_account(account_load('curve'))
+    # allow_delegation(-1)
+
+    # boa.env.eoa = "0x5802ad5D5B1c63b3FC7DE97B55e6db19e5d36462"
+    # boa.env.add_account(account_load('curve1'))
+    # delegate(-1, DEPLOYER)
+
+    # L2 side
     boa.fork(NETWORK, block_identifier="latest")
     boa.env.eoa = DEPLOYER
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
-    # deploy_delegate()
     boracle, voracle, verifier, d_verifier = deploy()
-    simulate("0x989AEb4d175e16225E39E87d0D97A3360524AD80", boracle, voracle, verifier)
+    block_number = boracle.apply()
+    verify_delegation(
+        252,
+        "0x5802ad5D5B1c63b3FC7DE97B55e6db19e5d36462",
+        boracle,
+        d_verifier,
+        block_number=block_number,
+    )
+    verify_delegation(
+        252,
+        "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683",
+        boracle,
+        d_verifier,
+        block_number=block_number,
+    )
+    verify(
+        "0x5802ad5D5B1c63b3FC7DE97B55e6db19e5d36462", boracle, verifier, block_number=block_number
+    )
+    verify(
+        "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683", boracle, verifier, block_number=block_number
+    )
+    verify_total(boracle, verifier, block_number=block_number)
+
+    # convex 0x989AEb4d175e16225E39E87d0D97A3360524AD80
+    # yearn 0x52f541764E6e90eeBc5c21Ff570De0e2D63766B6, 0xF147b8125d2ef93FB6965Db97D6746952a133934
