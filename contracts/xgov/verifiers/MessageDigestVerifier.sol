@@ -133,7 +133,7 @@ contract MessageDigestVerifier {
         require(slot.exists && slot.value != 0);
         require(keccak256(abi.encode(_messages)) == bytes32(slot.value));
 
-        uint256 deadline = Verifier.extractSlotValueFromProof(
+        Verifier.SlotValue memory deadline = Verifier.extractSlotValueFromProof(
             keccak256(
                 abi.encode(
                     keccak256( // self.deadline[_agent][_chain_id][_nonce]
@@ -151,10 +151,11 @@ contract MessageDigestVerifier {
             ),
             account.storageRoot,
             proofs[2].toList()
-        ).value;
+        );
+        require(deadline.exists && deadline.value != 0);
 
         ++nonce[_agent];
-        if (block.timestamp <= deadline) {
+        if (block.timestamp <= deadline.value) {
             IRelayer(RELAYER).relay(_agent, _messages);
         }
     }
