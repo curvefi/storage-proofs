@@ -38,6 +38,10 @@ event SetMaxV2Duration:
     max_v2_duration: uint256
 
 
+event NewProfitMaxUnlockTime:
+    profit_max_unlock_time: uint256
+
+
 struct PriceParams:
     # assets
     total_debt: uint256
@@ -91,6 +95,7 @@ def __init__(_initial_price: uint256):
         last_profit_update=0,
         balance_of_self=0,
     )
+    log NewProfitMaxUnlockTime(self.profit_max_unlock_time)
 
     # 2 * 10 ** 12 is equivalent to
     #   1) 0.02 bps per second or 0.24 bps per block on Ethereum
@@ -345,6 +350,7 @@ def update_profit_max_unlock_time(_profit_max_unlock_time: uint256, _block_numbe
 
     prev_value: uint256 = self.profit_max_unlock_time
     self.profit_max_unlock_time = _profit_max_unlock_time
+    log NewProfitMaxUnlockTime(_profit_max_unlock_time)
     return prev_value != _profit_max_unlock_time
 
 
