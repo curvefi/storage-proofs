@@ -88,8 +88,8 @@ def __init__(_initial_price: uint256):
     self.profit_max_unlock_time = 7 * 86400  # Week by default
     self.price_params = PriceParams(
         total_debt=0,
-        total_idle=1,
-        total_supply=1,
+        total_idle=_initial_price,
+        total_supply=10**18,
         full_profit_unlock_date=0,
         profit_unlocking_rate=0,
         last_profit_update=0,
