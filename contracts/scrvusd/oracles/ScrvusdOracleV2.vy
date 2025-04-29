@@ -296,6 +296,26 @@ def _raw_price(ts: uint256, parameters_ts: uint256) -> uint256:
     return self._total_assets(parameters) * 10**18 // self._total_supply(parameters, ts)
 
 
+def _update_price(_parameters: uint256[ALL_PARAM_CNT], _ts: uint256) -> uint256:
+    self.last_prices = [self._price_v0(), self._price_v1(), self._price_v2()]
+    self.last_update = block.timestamp
+
+    ts: uint256 = self.price_params_ts
+    current_price: uint256 = self._raw_price(ts, ts)
+    self.price_params = PriceParams(
+        total_debt=_parameters[0],
+        total_idle=_parameters[1],
+        total_supply=_parameters[2],
+        full_profit_unlock_date=_parameters[3],
+        profit_unlocking_rate=_parameters[4],
+        last_profit_update=_parameters[5],
+        balance_of_self=_parameters[6],
+    )
+    self.price_params_ts = _ts
+
+    return current_price
+
+
 @external
 def update_price(
     _parameters: uint256[ALL_PARAM_CNT], _ts: uint256, _block_number: uint256
@@ -312,21 +332,7 @@ def update_price(
     assert self.last_block_number <= _block_number, "Outdated"
     self.last_block_number = _block_number
 
-    self.last_prices = [self._price_v0(), self._price_v1(), self._price_v2()]
-    self.last_update = block.timestamp
-
-    ts: uint256 = self.price_params_ts
-    current_price: uint256 = self._raw_price(ts, ts)
-    self.price_params = PriceParams(
-        total_debt=_parameters[0],
-        total_idle=_parameters[1],
-        total_supply=_parameters[2],
-        full_profit_unlock_date=_parameters[3],
-        profit_unlocking_rate=_parameters[4],
-        last_profit_update=_parameters[5],
-        balance_of_self=_parameters[6],
-    )
-    self.price_params_ts = _ts
+    current_price: uint256 = self._update_price(_parameters, _ts)
 
     new_price: uint256 = self._raw_price(_ts, _ts)
     log PriceUpdate(new_price, _ts, _block_number)
@@ -349,6 +355,33 @@ def update_profit_max_unlock_time(_profit_max_unlock_time: uint256, _block_numbe
     self.last_block_number = _block_number
 
     prev_value: uint256 = self.profit_max_unlock_time
+
+    # If setting to 0, reset unlock parameters
+    if _profit_max_unlock_time == 0:
+        # Reset any locked shares
+        params: PriceParams = self._obtain_price_params(block.timestamp)
+        params.profit_unlocking_rate = 0
+        params.full_profit_unlock_date = 0
+
+        # Simulate burn of shares
+        params.total_supply -= params.balance_of_self
+        params.balance_of_self = 0
+        # Update storage with new parameters
+        self._update_price(
+            [
+                params.total_debt,
+                params.total_idle,
+                params.total_supply,
+                params.full_profit_unlock_date,
+                params.profit_unlocking_rate,
+                params.last_profit_update,
+                params.balance_of_self,
+            ],
+            block.timestamp,
+        )
+        self.price_params = params
+        self.price_params_ts = block.timestamp
+
     self.profit_max_unlock_time = _profit_max_unlock_time
     log NewProfitMaxUnlockTime(_profit_max_unlock_time)
     return prev_value != _profit_max_unlock_time
