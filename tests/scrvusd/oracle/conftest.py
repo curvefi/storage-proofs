@@ -3,9 +3,14 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def soracle(admin):
+def initial_price():
+    return 10**18
+
+
+@pytest.fixture(scope="module")
+def soracle(admin, initial_price):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10**18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", initial_price)
     return contract
 
 

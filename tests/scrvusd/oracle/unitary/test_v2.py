@@ -6,9 +6,9 @@ from tests.scrvusd.oracle.unitary.test_v1 import test_update_price  # noqa: F401
 
 
 @pytest.fixture(scope="module")
-def soracle(admin):
+def soracle(admin, initial_price):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", 10**18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV2.vy", initial_price)
     return contract
 
 
