@@ -5,9 +5,9 @@ from tests.scrvusd.conftest import DEFAULT_MAX_PRICE_INCREMENT
 
 
 @pytest.fixture(scope="module")
-def soracle(admin):
+def soracle(admin, initial_price):
     with boa.env.prank(admin):
-        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", 10**18)
+        contract = boa.load("contracts/scrvusd/oracles/ScrvusdOracleV1.vy", initial_price)
     return contract
 
 
