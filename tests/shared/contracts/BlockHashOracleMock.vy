@@ -42,10 +42,3 @@ def _set_state_root(_block_n: uint256, _state_root: bytes32):
 @external
 def find_known_block_number(_before: uint256 = 0) -> uint256:
     raise "NotImplemented"
-
-
-#@external
-# def print_i(i: uint256):
-#    print("BORACLE", i)
-
-

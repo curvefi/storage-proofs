@@ -7,8 +7,3 @@
 [submodule "tests/xgov/contracts/curve-xgov"]
 	path = tests/xgov/contracts/curve-xgov
 	url = https://github.com/curvefi/curve-xgov.git
-	branch = fix/xdao
-[submodule "tests/xgov/contracts/curve-xdao"]
-	path = tests/xgov/contracts/curve-xdao
-	url = https://github.com/curvefi/curve-xdao.git
-	branch = fix/message-passing
