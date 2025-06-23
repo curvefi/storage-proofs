@@ -7,6 +7,8 @@ This abstracts away the messaging protocol — dApps just verify data against th
 
 ![approach](docs/blockhash_approach.png)
 
+You can find LZ Blockhash Oracle infra at [curvefi/blockhash-oracle](https://github.com/curvefi/blockhash-oracle).
+
 ## Storage proof
 Each block has a **block header**, which includes the **state root** — a root hash of the entire Merkle Patricia Trie containing accounts and storage.
 Given a blockhash, you can verify the state root.
