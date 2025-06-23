@@ -30,11 +30,17 @@ BLOCK_HEADER = (
     "extraData",
     "mixHash",
     "nonce",
-    "baseFeePerGas",  # added by EIP-1559 and is ignored in legacy headers
-    "withdrawalsRoot",  # added by EIP-4895 and is ignored in legacy headers
-    "blobGasUsed",  # added by EIP-4844 and is ignored in legacy headers
-    "excessBlobGas",  # added by EIP-4844 and is ignored in legacy headers
-    "parentBeaconBlockRoot",  # added by EIP-4788 and is ignored in legacy headers
+    # New fields are ignored in legacy headers
+    # London
+    "baseFeePerGas",  # added by EIP-1559
+    # Shanghai
+    "withdrawalsRoot",  # added by EIP-4895
+    # Cancun
+    "blobGasUsed",  # added by EIP-4844
+    "excessBlobGas",  # added by EIP-4844
+    "parentBeaconBlockRoot",  # added by EIP-4788
+    # Prague
+    "requestsHash",  # added by EIP-7685
 )
 
 
