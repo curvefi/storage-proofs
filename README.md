@@ -7,6 +7,16 @@ This abstracts away the messaging protocol — dApps just verify data against th
 
 ![approach](docs/blockhash_approach.png)
 
+## Storage proof
+Each block has a **block header**, which includes the **state root** — a root hash of the entire Merkle Patricia Trie containing accounts and storage.
+Given a blockhash, you can verify the state root.
+On this graph, you see a trie with its root at the top, branching into nested nodes.
+
+![storage proof](docs/storage_proof.png)
+
+To prove a storage slot, you must verify the full path from the root down to the leaf node — or prove that it doesn’t exist.
+In red, you can see the exact proof path.
+
 ## System Specification
 
 ### Overview
