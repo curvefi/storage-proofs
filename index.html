@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Proofs Monitoring Dashboard</title>
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #111;
+            color: #eee;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #181818;
+            border-radius: 10px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+        .header {
+            background: #111;
+            color: #fff;
+            padding: 36px 24px 24px 24px;
+            text-align: center;
+            border-bottom: 1px solid #222;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+        .header p {
+            margin: 0;
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+        .tabs {
+            display: flex;
+            background: #181818;
+            border-bottom: 1px solid #222;
+        }
+        .tab {
+            flex: 1;
+            padding: 18px 0;
+            text-align: center;
+            cursor: pointer;
+            color: #aaa;
+            background: #181818;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: background 0.2s, color 0.2s;
+        }
+        .tab.active {
+            background: #111;
+            color: #4ea1ff;
+            border-bottom: 2px solid #4ea1ff;
+        }
+        .tab:not(.active):hover {
+            background: #222;
+            color: #fff;
+        }
+        .tab-content {
+            display: none;
+            padding: 40px 24px;
+            min-height: 300px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .content-header {
+            margin-bottom: 30px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #222;
+        }
+        .content-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        .content-header p {
+            margin: 10px 0 0 0;
+            color: #888;
+            font-size: 1.05rem;
+        }
+        .main-info {
+            background: #15181b;
+            border: 1px solid #23272e;
+            border-radius: 8px;
+            padding: 22px 18px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .main-info-left h3 {
+            margin: 0 0 8px 0;
+            color: #4ea1ff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .main-info-left .address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .main-info-left .address a {
+            color: #4ea1ff;
+            text-decoration: none;
+        }
+        .main-info-left .address a:hover {
+            text-decoration: underline;
+        }
+        .main-info-left .info-text {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .main-info-right .price {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #6cff6c;
+        }
+        .main-info-right .label {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .chains-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #15181b;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #23272e;
+        }
+        .chains-table th {
+            background: #23272e;
+            color: #fff;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #333;
+        }
+        .chains-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #23272e;
+            font-size: 0.9rem;
+        }
+        .chains-table tr:last-child td {
+            border-bottom: none;
+        }
+        .chains-table .chain-name {
+            font-weight: 600;
+            color: #4ea1ff;
+        }
+        .chains-table .oracle-address {
+            font-family: 'Courier New', monospace;
+            color: #aaa;
+        }
+        .chains-table .oracle-address a {
+            color: #4ea1ff;
+            text-decoration: none;
+        }
+        .chains-table .oracle-address a:hover {
+            text-decoration: underline;
+        }
+        .chains-table .price {
+            font-family: 'Courier New', monospace;
+            color: #6cff6c;
+            font-weight: 600;
+        }
+        .chains-table .timestamp {
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        .chains-table .tx-link {
+            color: #4ea1ff;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        .chains-table .tx-link:hover {
+            text-decoration: underline;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: #15181b;
+            border: 1px solid #23272e;
+            border-radius: 8px;
+            padding: 22px 18px;
+            transition: box-shadow 0.2s;
+            color: #eee;
+        }
+        .status-card h3 {
+            margin: 0 0 18px 0;
+            color: #4ea1ff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 13px;
+            padding: 7px 0;
+            border-bottom: 1px solid #23272e;
+        }
+        .metric:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .metric-label {
+            font-weight: 400;
+            color: #aaa;
+            font-size: 1rem;
+        }
+        .metric-value {
+            font-weight: 600;
+            color: #fff;
+            font-size: 1.05rem;
+        }
+        .metric-value.status {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .status-online {
+            background: #1a3c1a;
+            color: #6cff6c;
+        }
+        .status-offline {
+            background: #3c1a1a;
+            color: #ff6c6c;
+        }
+        .status-warning {
+            background: #3c3c1a;
+            color: #ffe66c;
+        }
+        .chain-info {
+            background: #181818;
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 18px;
+            border: 1px solid #23272e;
+        }
+        .chain-info h4 {
+            margin-bottom: 10px;
+            color: #eee;
+        }
+        .chain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .chain-item {
+            background: #15181b;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #23272e;
+        }
+        .chain-name {
+            font-weight: 600;
+            color: #4ea1ff;
+            margin-bottom: 3px;
+        }
+        .chain-address {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #aaa;
+            word-break: break-all;
+        }
+        .refresh-btn {
+            background: #23272e;
+            color: #eee;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: background 0.2s, color 0.2s;
+            margin: 24px 0 0 0;
+            display: block;
+            margin-left: auto;
+        }
+        .refresh-btn:hover {
+            background: #4ea1ff;
+            color: #111;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            color: #888;
+        }
+        .spinner {
+            border: 3px solid #23272e;
+            border-top: 3px solid #4ea1ff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 18px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 700px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .tab-content {
+                padding: 18px 6px;
+            }
+            .main-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .chains-table {
+                font-size: 0.8rem;
+            }
+            .chains-table th,
+            .chains-table td {
+                padding: 8px 4px;
+            }
+        }
+        .divider-row {
+            background: #23272e;
+        }
+        .divider-cell {
+            padding: 8px 12px;
+            text-align: center;
+            border: none;
+        }
+        .divider-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .divider-text {
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .deprecated-row {
+            opacity: 0.7;
+        }
+        .deprecated-row:hover {
+            opacity: 1;
+        }
+        .deprecated-row .chain-name {
+            color: #888;
+        }
+        .chains-table .deprecated-row {
+            opacity: 0.6;
+        }
+        
+        .chains-table .ethereum-row {
+            background-color: #1a1a1a;
+            font-weight: bold;
+        }
+
+        .chains-table .outdated-row {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .chains-table .outdated-row .nonce {
+            color: #ffc107;
+        }
+
+        .address-input-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #181818;
+            border-radius: 8px;
+            border: 1px solid #23272e;
+        }
+
+        .address-input-section h3 {
+            margin: 0 0 15px 0;
+            color: #4ea1ff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .address-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .custom-dropdown {
+            position: relative;
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .address-input {
+            background: #23272e;
+            color: #eee;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #4ea1ff;
+        }
+
+        .dropdown-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #23272e;
+            border: 1px solid #333;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            color: #eee;
+            border-bottom: 1px solid #333;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: #4ea1ff;
+            color: #111;
+        }
+
+        .check-address-btn {
+            background: #4ea1ff;
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .check-address-btn:hover {
+            background: #3b8ce6;
+        }
+
+        @media (max-width: 700px) {
+            .address-input-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .address-input {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        .address-balance {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .address-balance h4 {
+            margin: 0 0 10px 0;
+            color: #4ea1ff;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .balance-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .delegation-mismatch {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .delegation-mismatch .delegation-cell {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Storage Proofs Monitoring Dashboard</h1>
+            <p>Real-time monitoring of Curve's cross-chain storage proofs applications</p>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('scrvusd')">scrvUSD</button>
+            <button class="tab" onclick="switchTab('vecrv')">veCRV</button>
+            <button class="tab" onclick="switchTab('xgov')">xGov</button>
+        </div>
+        <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        <div id="scrvusd" class="tab-content active">
+            <div class="content-header">
+                <h2>scrvUSD Price Oracle</h2>
+                <p>Monitor scrvUSD oracle prices across different chains</p>
+            </div>
+            
+            <!-- Main scrvUSD Info -->
+            <div class="main-info">
+                <div class="main-info-left">
+                    <h3>scrvUSD (Ethereum)</h3>
+                    <div class="address">
+                        <a href="https://etherscan.io/address/0x0655977FEb2f289A4aB78af67BAB0d17aAb84367" target="_blank">
+                            0x0655977FEb2f289A4aB78af67BAB0d17aAb84367
+                        </a>
+                    </div>
+                </div>
+                <div class="main-info-right">
+                    <div class="price" id="main-price">--</div>
+                    <div class="label">Current .pricePerShare()</div>
+                </div>
+            </div>
+
+            <!-- Chains Table -->
+            <table class="chains-table">
+                <thead>
+                    <tr>
+                        <th>Chain</th>
+                        <th>Oracle</th>
+                        <th>v0 Price</th>
+                        <th>v1 Price</th>
+                        <th>v2 Price</th>
+                        <th>Last Update</th>
+                    </tr>
+                </thead>
+                <tbody id="scrvusd-table-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="vecrv" class="tab-content">
+            <div class="content-header">
+                <h2>veCRV Balances</h2>
+                <p>Monitor veCRV total supply across chains</p>
+            </div>
+            
+            <!-- Main veCRV Info -->
+            <div class="main-info">
+                <div class="main-info-left">
+                    <h3>veCRV (Ethereum)</h3>
+                    <div class="address">
+                        <a href="https://etherscan.io/address/0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2" target="_blank">
+                            0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2
+                        </a>
+                    </div>
+                    <h3>Delegate (Ethereum)</h3>
+                    <div class="address">
+                        <a href="https://etherscan.io/address/0xde1e6A7E8297076f070E857130E593107A0E0cF5" target="_blank">
+                            0xde1e6A7E8297076f070E857130E593107A0E0cF5
+                        </a>
+                    </div>
+                </div>
+                <div class="main-info-right">
+                    <div class="price">
+                        <span id="ethereum-totalsupply">Loading...</span>
+                    </div>
+                    <div class="price-label">Current Total Supply</div>
+                </div>
+            </div>
+
+            <!-- Total Supply Comparison Table -->
+            <table class="chains-table">
+                <thead>
+                    <tr>
+                        <th>Chain</th>
+                        <th>Chain ID</th>
+                        <th>Oracle Address</th>
+                        <th>Total Supply</th>
+                    </tr>
+                </thead>
+                <tbody id="vecrv-table-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+
+            <!-- Address Input Section -->
+            <div class="address-input-section">
+                <h3>Check Specific Address</h3>
+                <div class="address-input-container">
+                    <div class="custom-dropdown">
+                        <input type="text" id="address-input" class="address-input" placeholder="Enter address or select from list..." />
+                        <div class="dropdown-arrow">▼</div>
+                        <div class="dropdown-menu" id="dropdown-menu">
+                            <div class="dropdown-item" data-address="0x989AEb4d175e16225E39E87d0D97A3360524AD80">Convex (0x989...AD80)</div>
+                            <div class="dropdown-item" data-address="0x52f541764E6e90eeBc5c21Ff570De0e2D63766B6">Yearn (0x52f5...766B6)</div>
+                            <div class="dropdown-item" data-address="0xF147b8125d2ef93FB6965Db97D6746952a133934">Stake DAO (0xF147...3934)</div>
+                        </div>
+                    </div>
+                    <button id="check-address-btn" class="check-address-btn">Check Address</button>
+                </div>
+                
+                <!-- Address Balance Display -->
+                <div class="address-balance" id="address-balance">
+                    <h4>Current veCRV Balance</h4>
+                    <div class="balance-display">
+                        <span id="balance-amount">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delegation Table -->
+            <table class="chains-table" id="delegation-table">
+                <thead>
+                    <tr>
+                        <th>Chain</th>
+                        <th>Chain ID</th>
+                        <th>Delegation on Ethereum</th>
+                        <th>Delegation on Chain</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="delegation-table-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="xgov" class="tab-content">
+            <div class="content-header">
+                <h2>xGov Message Digest</h2>
+                <p>Monitor cross-chain governance message nonces</p>
+            </div>
+            
+            <!-- Main Broadcaster Info -->
+            <div class="main-info">
+                <div class="main-info-left">
+                    <h3>Broadcaster (Ethereum)</h3>
+                    <div class="address">
+                        <a href="https://etherscan.io/address/0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc" target="_blank">
+                            0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc
+                        </a>
+                    </div>
+                    <p class="info-text">Reference nonces are fetched from the broadcaster for each chain ID</p>
+                </div>
+            </div>
+
+            <!-- Nonces Comparison Table -->
+            <table class="chains-table">
+                <thead>
+                    <tr>
+                        <th>Chain</th>
+                        <th>Chain ID</th>
+                        <th>Verifier Address</th>
+                        <th>Ownership</th>
+                        <th>Parameter</th>
+                        <th>Emergency</th>
+                    </tr>
+                </thead>
+                <tbody id="xgov-table-body">
+                    <!-- Data will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script>
+        // Check if ethers is loaded
+        if (typeof ethers === 'undefined') {
+            console.error('ethers.js library not loaded. Trying alternative CDN...');
+            // Try alternative CDN
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js';
+            script.onload = function() {
+                console.log('ethers.js loaded from alternative CDN');
+                // Re-initialize the page
+                document.dispatchEvent(new Event('DOMContentLoaded'));
+            };
+            script.onerror = function() {
+                console.error('Failed to load ethers.js from both CDNs');
+                alert('Failed to load ethers.js library. Please check your internet connection and refresh the page.');
+            };
+            document.head.appendChild(script);
+        }
+        let currentTab = 'scrvusd';
+        let provider = null;
+        let signer = null;
+        let walletConnected = false;
+
+        // Deployment addresses
+        const deployments = {
+            "optimism": {
+                "scrvusd_oracle": "0x5dCaC7D564672e3D1e09B2560a545f57B9A5C6eE",
+                "explorer": "https://optimistic.etherscan.io",
+                "rpc": "https://mainnet.optimism.io",
+                "version": "v2"
+            },
+            "sonic": {
+                "scrvusd_oracle": "0x38AEE71610a3683a4c6e6e691f26365C6f123cf8",
+                "explorer": "https://sonicscan.org",
+                "rpc": "https://rpc.soniclabs.com",
+                "version": "v2"
+            },
+            "base-deprecated": {
+                "scrvusd_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1",
+                "explorer": "https://basescan.org",
+                "rpc": "https://mainnet.base.org",
+                "version": "v0"
+            },
+            "fraxtal-deprecated": {
+                "scrvusd_oracle": "0x09F8D940EAD55853c51045bcbfE67341B686C071",
+                "explorer": "https://fraxscan.com",
+                "rpc": "https://rpc.frax.com",
+                "version": "v0"
+            },
+            "mantle-deprecated": {
+                "scrvusd_oracle": "0xbD2775B8eADaE81501898eB208715f0040E51882",
+                "explorer": "https://mantlescan.xyz",
+                "rpc": "https://rpc.mantle.xyz",
+                "version": "v0"
+            },
+            "taiko-deprecated": {
+                "scrvusd_oracle": "0x070A5C8a99002F50C18B52B90e938BC477611b16",
+                "explorer": "https://taikoscan.io",
+                "rpc": "https://rpc.taiko.xyz",
+                "version": "v1"
+            }
+        };
+
+        // xGov deployments
+        const xgovDeployments = {
+            "sonic": {
+                "verifier": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
+                "explorer": "https://sonicscan.org",
+                "rpc": "https://rpc.soniclabs.com",
+                "chainId": 146 // Sonic chain ID
+            }
+        };
+
+        // veCRV deployments
+        const vecrvDeployments = {
+            "optimism": {
+                "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d",
+                "explorer": "https://optimistic.etherscan.io",
+                "rpc": "https://mainnet.optimism.io"
+            },
+            "base": {
+                "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412",
+                "explorer": "https://basescan.org",
+                "rpc": "https://mainnet.base.org"
+            },
+            "fraxtal": {
+                "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
+                "explorer": "https://fraxscan.com",
+                "rpc": "https://rpc.frax.com"
+            },
+            "mantle": {
+                "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5",
+                "explorer": "https://mantlescan.xyz",
+                "rpc": "https://rpc.mantle.xyz"
+            },
+            "taiko": {
+                "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30",
+                "explorer": "https://taikoscan.io",
+                "rpc": "https://rpc.taiko.xyz"
+            },
+            "sonic": {
+                "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d",
+                "explorer": "https://sonicscan.org",
+                "rpc": "https://rpc.soniclabs.com"
+            }
+        };
+
+        // Agent types
+        const agents = {
+            "ownership": 1,
+            "parameter": 2,
+            "emergency": 4
+        };
+
+        // Contract ABIs for different versions
+        const oracleV2ABI = [
+            {
+                "inputs": [],
+                "name": "price_v0",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "price_v1", 
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "price_v2",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": false, "name": "new_price", "type": "uint256"},
+                    {"indexed": false, "name": "price_params_ts", "type": "uint256"},
+                    {"indexed": false, "name": "block_number", "type": "uint256"}
+                ],
+                "name": "PriceUpdate",
+                "type": "event"
+            }
+        ];
+
+        const oracleV0ABI = [
+            {
+                "inputs": [],
+                "name": "pricePerShare",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": false, "name": "new_price", "type": "uint256"},
+                    {"indexed": false, "name": "at", "type": "uint256"}
+                ],
+                "name": "PriceUpdate",
+                "type": "event"
+            }
+        ];
+
+        const oracleV1ABI = [
+            {
+                "inputs": [],
+                "name": "price_v0",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "price_v1", 
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {"indexed": false, "name": "new_price", "type": "uint256"},
+                    {"indexed": false, "name": "price_params_ts", "type": "uint256"},
+                    {"indexed": false, "name": "block_number", "type": "uint256"}
+                ],
+                "name": "PriceUpdate",
+                "type": "event"
+            }
+        ];
+
+        const scrvusdABI = [
+            {
+                "inputs": [],
+                "name": "pricePerShare",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const verifierABI = [
+            {
+                "inputs": [{"name": "", "type": "uint256"}],
+                "name": "nonce",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const broadcasterABI = [
+            {
+                "inputs": [
+                    {"name": "agent", "type": "uint256"},
+                    {"name": "chainId", "type": "uint256"}
+                ],
+                "name": "nonce",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const vecrvABI = [
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"name": "account", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const vecrvOracleABI = [
+            {
+                "inputs": [{"name": "delegator", "type": "address"}],
+                "name": "delegated",
+                "outputs": [{"name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"name": "account", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const delegateABI = [
+            {
+                "inputs": [
+                    {"name": "chainId", "type": "uint256"},
+                    {"name": "delegator", "type": "address"}
+                ],
+                "name": "delegated",
+                "outputs": [{"name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // Cache variables
+        let scrvusdCache = null;
+        let vecrvCache = null;
+        let xgovCache = null;
+        let addressCache = {};
+
+
+
+        // Connect wallet
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Please install MetaMask or another Web3 wallet');
+                    return;
+                }
+
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+
+                const address = await signer.getAddress();
+                walletConnected = true;
+
+                document.getElementById('wallet-btn').textContent = `${address.slice(0,6)}...${address.slice(-4)}`;
+                document.getElementById('wallet-btn').className = 'connected';
+                document.getElementById('wallet-btn').disabled = true;
+
+                const network = await provider.getNetwork();
+                document.getElementById('wallet-info').textContent = `Connected to Chain ID: ${network.chainId}`;
+
+                console.log('Wallet connected successfully');
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                alert('Failed to connect wallet: ' + error.message);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            currentTab = tabName;
+            
+            // Use cached data if available, otherwise load fresh data
+            if (tabName === 'scrvusd') {
+                if (scrvusdCache !== null) {
+                    displayScrvusdData(scrvusdCache);
+                } else {
+                    loadScrvusdData();
+                }
+            } else if (tabName === 'vecrv') {
+                if (vecrvCache !== null) {
+                    displayVecrvData(vecrvCache);
+                } else {
+                    loadVecrvData();
+                }
+            } else if (tabName === 'xgov') {
+                if (xgovCache !== null) {
+                    displayXgovData(xgovCache);
+                } else {
+                    loadXgovData();
+                }
+            }
+        }
+
+        function formatPrice(price) {
+            if (price === null || price === undefined || price === '--') return '--';
+            return (parseFloat(price) / 1e18).toFixed(5);
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '--';
+            
+            const now = Math.floor(Date.now() / 1000);
+            const diff = now - timestamp;
+            
+            const days = Math.floor(diff / 86400);
+            const hours = Math.floor((diff % 86400) / 3600);
+            
+            if (days > 0) {
+                return `${days}d ${hours}h ago`;
+            } else if (hours > 0) {
+                return `${hours}h ago`;
+            } else {
+                const minutes = Math.floor((diff % 3600) / 60);
+                if (minutes > 0) {
+                    return `${minutes}m ago`;
+                } else {
+                    return 'Just now';
+                }
+            }
+        }
+
+        function getExplorerUrl(chain, address) {
+            if (deployments[chain]) {
+                return `${deployments[chain].explorer}/address/${address}`;
+            }
+            return `https://etherscan.io/address/${address}`;
+        }
+
+        function getExplorerTxUrl(chain, txHash) {
+            if (deployments[chain]) {
+                return `${deployments[chain].explorer}/tx/${txHash}`;
+            }
+            return `https://etherscan.io/tx/${txHash}`;
+        }
+
+        function getXgovExplorerUrl(chain, address) {
+            if (xgovDeployments[chain]) {
+                return `${xgovDeployments[chain].explorer}/address/${address}`;
+            }
+            return `https://etherscan.io/address/${address}`;
+        }
+
+        function getVecrvExplorerUrl(chain, address) {
+            if (vecrvDeployments[chain]) {
+                return `${vecrvDeployments[chain].explorer}/address/${address}`;
+            }
+            return `https://etherscan.io/address/${address}`;
+        }
+
+        // Fetch main scrvUSD price from Ethereum
+        async function fetchMainScrvusdPrice() {
+            try {
+                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainContract = new ethers.Contract('0x0655977FEb2f289A4aB78af67BAB0d17aAb84367', scrvusdABI, mainProvider);
+                const price = await mainContract.pricePerShare();
+                return parseFloat(ethers.utils.formatUnits(price, 18));
+            } catch (error) {
+                console.error('Error fetching main price:', error);
+                return null;
+            }
+        }
+
+        // Fetch oracle data for a specific chain
+        async function fetchOracleData(chain, oracleAddress) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(deployments[chain].rpc);
+                const version = deployments[chain].version;
+                
+                // Select appropriate ABI based on version
+                let oracleABI;
+                switch (version) {
+                    case 'v0':
+                        oracleABI = oracleV0ABI;
+                        break;
+                    case 'v1':
+                        oracleABI = oracleV1ABI;
+                        break;
+                    case 'v2':
+                        oracleABI = oracleV2ABI;
+                        break;
+                    default:
+                        oracleABI = oracleV2ABI;
+                }
+                
+                const oracleContract = new ethers.Contract(oracleAddress, oracleABI, chainProvider);
+                
+                // Fetch prices based on version
+                let v0Price, v1Price, v2Price;
+                
+                if (version === 'v0') {
+                    // ScrvusdOracle: v0 = pricePerShare, v1/v2 = --
+                    v0Price = await oracleContract.pricePerShare();
+                    v1Price = '--';
+                    v2Price = '--';
+                } else if (version === 'v1') {
+                    // ScrvusdOracleV1: v0 and v1 available, v2 = --
+                    v0Price = await oracleContract.price_v0();
+                    v1Price = await oracleContract.price_v1();
+                    v2Price = '--';
+                } else {
+                    // ScrvusdOracleV2: all versions available
+                    [v0Price, v1Price, v2Price] = await Promise.all([
+                        oracleContract.price_v0(),
+                        oracleContract.price_v1(),
+                        oracleContract.price_v2()
+                    ]);
+                }
+
+                // Get current block number
+                const currentBlock = await chainProvider.getBlockNumber();
+                
+                // Calculate block ranges for different time periods
+                // Assuming ~2 seconds per block (adjust based on chain)
+                const blocksPerDay = 43200; // 24 * 60 * 30
+                const blocksPerWeek = blocksPerDay * 7;
+                const blocksPerMonth = blocksPerDay * 30;
+                const blocksPerYear = blocksPerDay * 365;
+
+                // Check for events in progressively larger ranges
+                let lastUpdate = null;
+                let txHash = null;
+                let events = [];
+
+                // Try last day
+                try {
+                    events = await oracleContract.queryFilter('PriceUpdate', currentBlock - blocksPerDay, 'latest');
+                } catch (e) {
+                    console.log(`No events found in last day for ${chain}`);
+                }
+
+                // If no events in last day, try last week
+                if (events.length === 0) {
+                    try {
+                        events = await oracleContract.queryFilter('PriceUpdate', currentBlock - blocksPerWeek, 'latest');
+                    } catch (e) {
+                        console.log(`No events found in last week for ${chain}`);
+                    }
+                }
+
+                // If no events in last week, try last month
+                if (events.length === 0) {
+                    try {
+                        events = await oracleContract.queryFilter('PriceUpdate', currentBlock - blocksPerMonth, 'latest');
+                    } catch (e) {
+                        console.log(`No events found in last month for ${chain}`);
+                    }
+                }
+
+                // If no events in last month, try last year
+                if (events.length === 0) {
+                    try {
+                        events = await oracleContract.queryFilter('PriceUpdate', currentBlock - blocksPerYear, 'latest');
+                    } catch (e) {
+                        console.log(`No events found in last year for ${chain}`);
+                    }
+                }
+
+                // If we found events, get the latest one
+                if (events.length > 0) {
+                    const latestEvent = events[events.length - 1];
+                    
+                    // Handle different event structures
+                    if (version === 'v0') {
+                        // ScrvusdOracle: event has 'at' field instead of 'price_params_ts'
+                        lastUpdate = latestEvent.args[1]; // 'at' is the second argument
+                    } else {
+                        // ScrvusdOracleV1/V2: event has 'price_params_ts' field
+                        lastUpdate = latestEvent.args[1]; // 'price_params_ts' is the second argument
+                    }
+                    
+                    txHash = latestEvent.transactionHash;
+                }
+
+                return {
+                    v0Price,
+                    v1Price,
+                    v2Price,
+                    lastUpdate,
+                    txHash
+                };
+            } catch (error) {
+                console.error(`Error fetching data for ${chain}:`, error);
+                return {
+                    v0Price: '--',
+                    v1Price: '--',
+                    v2Price: '--',
+                    lastUpdate: null,
+                    txHash: null
+                };
+            }
+        }
+
+        async function loadScrvusdData() {
+            console.log('Loading scrvUSD data...');
+            
+            // Fetch main scrvUSD price from Ethereum
+            const mainPrice = await fetchMainScrvusdPrice();
+            console.log('Main price:', mainPrice);
+            
+            // Update main price display
+            const mainPriceDisplay = document.getElementById('main-price');
+            mainPriceDisplay.textContent = mainPrice !== null ? mainPrice.toFixed(6) : '--';
+            
+            // Populate table
+            const tableBody = document.getElementById('scrvusd-table-body');
+            tableBody.innerHTML = '';
+
+            const data = { mainPrice, chains: [] };
+
+            // Separate active and deprecated deployments
+            const activeDeployments = Object.entries(deployments).filter(([chain, data]) => !chain.includes('-deprecated'));
+            const deprecatedDeployments = Object.entries(deployments).filter(([chain, data]) => chain.includes('-deprecated'));
+
+            console.log('Active deployments:', activeDeployments.length);
+            console.log('Deprecated deployments:', deprecatedDeployments.length);
+
+            // Create all rows first with loading state
+            const activeRows = [];
+            for (const [chain, chainData] of activeDeployments) {
+                console.log(`Processing active chain: ${chain}`);
+                const row = document.createElement('tr');
+                
+                // Show loading state
+                row.innerHTML = `
+                    <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
+                    <td class="oracle-address">
+                        <a href="${getExplorerUrl(chain, chainData.scrvusd_oracle)}" target="_blank">
+                            ${chainData.scrvusd_oracle}
+                        </a>
+                    </td>
+                    <td class="price">Loading...</td>
+                    <td class="price">Loading...</td>
+                    <td class="price">Loading...</td>
+                    <td>
+                        <div class="timestamp">Loading...</div>
+                        <a href="#" class="tx-link">--</a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                activeRows.push({ row, chain, chainData });
+            }
+
+            // Add divider row between active and deprecated
+            if (deprecatedDeployments.length > 0) {
+                const dividerRow = document.createElement('tr');
+                dividerRow.className = 'divider-row';
+                dividerRow.innerHTML = `
+                    <td colspan="6" class="divider-cell">
+                        <div class="divider-content">
+                            <span class="divider-text">Deprecated Deployments</span>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(dividerRow);
+            }
+
+            // Create all deprecated rows with loading state
+            const deprecatedRows = [];
+            for (const [chain, chainData] of deprecatedDeployments) {
+                console.log(`Processing deprecated chain: ${chain}`);
+                const row = document.createElement('tr');
+                row.className = 'deprecated-row';
+                
+                // Show loading state
+                row.innerHTML = `
+                    <td class="chain-name">${chain.replace('-deprecated', '').charAt(0).toUpperCase() + chain.replace('-deprecated', '').slice(1)}</td>
+                    <td class="oracle-address">
+                        <a href="${getExplorerUrl(chain, chainData.scrvusd_oracle)}" target="_blank">
+                            ${chainData.scrvusd_oracle}
+                        </a>
+                    </td>
+                    <td class="price">Loading...</td>
+                    <td class="price">Loading...</td>
+                    <td class="price">Loading...</td>
+                    <td>
+                        <div class="timestamp">Loading...</div>
+                        <a href="#" class="tx-link">--</a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                deprecatedRows.push({ row, chain, chainData });
+            }
+
+            // Now fetch all data in parallel
+            const allRows = [...activeRows, ...deprecatedRows];
+            const fetchPromises = allRows.map(async ({ row, chain, chainData }) => {
+                try {
+                    // Fetch actual data using existing function
+                    const oracleData = await fetchOracleData(chain, chainData.scrvusd_oracle);
+                    console.log(`Oracle data for ${chain}:`, oracleData);
+                    
+                    // Update row with real data
+                    const cells = row.cells;
+                    cells[2].textContent = formatPrice(oracleData.v0Price);
+                    cells[3].textContent = formatPrice(oracleData.v1Price);
+                    cells[4].textContent = formatPrice(oracleData.v2Price);
+                    
+                    const timestampCell = cells[5];
+                    timestampCell.innerHTML = `
+                        <div class="timestamp">${formatTimestamp(oracleData.lastUpdate)}</div>
+                        ${oracleData.txHash ? 
+                            `<a href="${getExplorerTxUrl(chain, oracleData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
+                            '<span class="tx-link">--</span>'
+                        }
+                    `;
+
+                    // Add to data cache
+                    data.chains.push({ 
+                        chain, 
+                        v0Price: oracleData.v0Price,
+                        v1Price: oracleData.v1Price,
+                        v2Price: oracleData.v2Price,
+                        lastUpdate: oracleData.lastUpdate,
+                        txHash: oracleData.txHash,
+                        oracle: chainData.scrvusd_oracle, 
+                        version: chainData.version 
+                    });
+                } catch (error) {
+                    console.error(`Error processing ${chain}:`, error);
+                    // Update row with error state
+                    const cells = row.cells;
+                    cells[2].textContent = 'Error';
+                    cells[3].textContent = 'Error';
+                    cells[4].textContent = 'Error';
+                    cells[5].innerHTML = '<div class="timestamp">Error</div><span class="tx-link">--</span>';
+                }
+            });
+
+            // Wait for all data to load
+            await Promise.all(fetchPromises);
+
+
+
+            console.log('Final data cache:', data);
+            // Cache the data
+            scrvusdCache = data;
+        }
+
+        function displayScrvusdData(data) {
+            // Update main price display
+            const mainPriceDisplay = document.getElementById('main-price');
+            mainPriceDisplay.textContent = data.mainPrice !== null ? data.mainPrice.toFixed(6) : '--';
+            
+            // Populate table
+            const tableBody = document.getElementById('scrvusd-table-body');
+            tableBody.innerHTML = '';
+
+            // Separate active and deprecated chains
+            const activeChains = data.chains.filter(chainData => !chainData.chain.includes('-deprecated'));
+            const deprecatedChains = data.chains.filter(chainData => chainData.chain.includes('-deprecated'));
+
+            // Display active chains
+            activeChains.forEach(chainData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
+                    <td class="oracle-address">
+                        <a href="${getExplorerUrl(chainData.chain, chainData.oracle)}" target="_blank">
+                            ${chainData.oracle}
+                        </a>
+                    </td>
+                    <td class="price">${formatPrice(chainData.v0Price)}</td>
+                    <td class="price">${formatPrice(chainData.v1Price)}</td>
+                    <td class="price">${formatPrice(chainData.v2Price)}</td>
+                    <td>${chainData.lastUpdate ? 
+                        `<div class="timestamp">${formatTimestamp(chainData.lastUpdate)}</div>
+                         ${chainData.txHash ? 
+                             `<a href="${getExplorerTxUrl(chainData.chain, chainData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
+                             '<span class="tx-link">--</span>'
+                         }` : '--'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // Add divider row between active and deprecated
+            if (deprecatedChains.length > 0) {
+                const dividerRow = document.createElement('tr');
+                dividerRow.className = 'divider-row';
+                dividerRow.innerHTML = `
+                    <td colspan="6" class="divider-cell">
+                        <div class="divider-content">
+                            <span class="divider-text">Deprecated Deployments</span>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(dividerRow);
+            }
+
+            // Display deprecated chains
+            deprecatedChains.forEach(chainData => {
+                const row = document.createElement('tr');
+                row.className = 'deprecated-row';
+                row.innerHTML = `
+                    <td class="chain-name">${chainData.chain.replace('-deprecated', '').charAt(0).toUpperCase() + chainData.chain.replace('-deprecated', '').slice(1)}</td>
+                    <td class="oracle-address">
+                        <a href="${getExplorerUrl(chainData.chain, chainData.oracle)}" target="_blank">
+                            ${chainData.oracle}
+                        </a>
+                    </td>
+                    <td class="price">${formatPrice(chainData.v0Price)}</td>
+                    <td class="price">${formatPrice(chainData.v1Price)}</td>
+                    <td class="price">${formatPrice(chainData.v2Price)}</td>
+                    <td>${chainData.lastUpdate ? 
+                        `<div class="timestamp">${formatTimestamp(chainData.lastUpdate)}</div>
+                         ${chainData.txHash ? 
+                             `<a href="${getExplorerTxUrl(chainData.chain, chainData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
+                             '<span class="tx-link">--</span>'
+                         }` : '--'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Fetch chain ID from network
+        async function fetchChainId(chain) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(xgovDeployments[chain].rpc);
+                const network = await chainProvider.getNetwork();
+                return network.chainId;
+            } catch (error) {
+                console.error(`Error fetching chain ID for ${chain}:`, error);
+                return null;
+            }
+        }
+
+        // Fetch nonces from Ethereum broadcaster for a specific chain
+        async function fetchEthereumNoncesForChain(chainId) {
+            try {
+                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const broadcasterContract = new ethers.Contract('0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc', broadcasterABI, mainProvider);
+                
+                const [ownershipNonce, parameterNonce, emergencyNonce] = await Promise.all([
+                    broadcasterContract.nonce(agents.ownership, chainId),
+                    broadcasterContract.nonce(agents.parameter, chainId),
+                    broadcasterContract.nonce(agents.emergency, chainId)
+                ]);
+
+                return {
+                    ownership: ownershipNonce.toNumber(),
+                    parameter: parameterNonce.toNumber(),
+                    emergency: emergencyNonce.toNumber()
+                };
+            } catch (error) {
+                console.error(`Error fetching Ethereum nonces for chain ${chainId}:`, error);
+                return { ownership: null, parameter: null, emergency: null };
+            }
+        }
+
+        // Fetch nonces from chain verifier
+        async function fetchChainNonces(chain, verifierAddress) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(xgovDeployments[chain].rpc);
+                const verifierContract = new ethers.Contract(verifierAddress, verifierABI, chainProvider);
+                
+                const [ownershipNonce, parameterNonce, emergencyNonce] = await Promise.all([
+                    verifierContract.nonce(agents.ownership),
+                    verifierContract.nonce(agents.parameter),
+                    verifierContract.nonce(agents.emergency)
+                ]);
+
+                return {
+                    ownership: ownershipNonce.toNumber(),
+                    parameter: parameterNonce.toNumber(),
+                    emergency: emergencyNonce.toNumber()
+                };
+            } catch (error) {
+                console.error(`Error fetching nonces for ${chain}:`, error);
+                return { ownership: null, parameter: null, emergency: null };
+            }
+        }
+
+        async function loadXgovData() {
+            // Populate table
+            const tableBody = document.getElementById('xgov-table-body');
+            tableBody.innerHTML = '';
+
+            const data = { chains: [] };
+
+            // Create all rows first with loading state
+            const xgovRows = [];
+            for (const [chain, data] of Object.entries(xgovDeployments)) {
+                const row = document.createElement('tr');
+                
+                // Show loading state
+                row.innerHTML = `
+                    <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
+                    <td class="chain-id">Loading...</td>
+                    <td class="oracle-address">
+                        <a href="${getXgovExplorerUrl(chain, data.verifier)}" target="_blank">
+                            ${data.verifier}
+                        </a>
+                    </td>
+                    <td class="nonce">Loading...</td>
+                    <td class="nonce">Loading...</td>
+                    <td class="nonce">Loading...</td>
+                `;
+                tableBody.appendChild(row);
+                xgovRows.push({ row, chain, data });
+            }
+
+            // Now fetch all data in parallel
+            const xgovFetchPromises = xgovRows.map(async ({ row, chain, data }) => {
+                // Fetch actual chain ID from network
+                const actualChainId = await fetchChainId(chain);
+                
+                // Fetch reference nonces from Ethereum broadcaster for this chain
+                const ethereumNonces = await fetchEthereumNoncesForChain(data.chainId);
+                
+                // Fetch actual nonces from chain verifier
+                const chainNonces = await fetchChainNonces(chain, data.verifier);
+                
+                // Update row with real data
+                const cells = row.cells;
+                cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
+                
+                // Helper function to format nonce display
+                const formatNonce = (verifierNonce, broadcasterNonce) => {
+                    const verifier = verifierNonce !== null ? verifierNonce : '--';
+                    const broadcaster = broadcasterNonce !== null ? broadcasterNonce : '--';
+                    return `${verifier} / ${broadcaster}`;
+                };
+                
+                cells[3].textContent = formatNonce(chainNonces.ownership, ethereumNonces.ownership);
+                cells[4].textContent = formatNonce(chainNonces.parameter, ethereumNonces.parameter);
+                cells[5].textContent = formatNonce(chainNonces.emergency, ethereumNonces.emergency);
+
+                // Check if any nonce is outdated and highlight the row
+                const isOutdated = (chainNonces.ownership !== null && ethereumNonces.ownership !== null && chainNonces.ownership < ethereumNonces.ownership) ||
+                                 (chainNonces.parameter !== null && ethereumNonces.parameter !== null && chainNonces.parameter < ethereumNonces.parameter) ||
+                                 (chainNonces.emergency !== null && ethereumNonces.emergency !== null && chainNonces.emergency < ethereumNonces.emergency);
+
+                if (isOutdated) {
+                    row.className = 'outdated-row';
+                }
+
+                // Add to data cache
+                data.chains.push({ 
+                    chain, 
+                    chainId: actualChainId, 
+                    ethereumNonces, 
+                    chainNonces, 
+                    verifier: data.verifier,
+                    isOutdated 
+                });
+            });
+
+            // Wait for all data to load
+            await Promise.all(xgovFetchPromises);
+
+            // Cache the data
+            xgovCache = data;
+        }
+
+        function displayXgovData(data) {
+            // Populate table
+            const tableBody = document.getElementById('xgov-table-body');
+            tableBody.innerHTML = '';
+
+            data.chains.forEach(chainData => {
+                const row = document.createElement('tr');
+                
+                // Helper function to format nonce display
+                const formatNonce = (verifierNonce, broadcasterNonce) => {
+                    const verifier = verifierNonce !== null ? verifierNonce : '--';
+                    const broadcaster = broadcasterNonce !== null ? broadcasterNonce : '--';
+                    return `${verifier} / ${broadcaster}`;
+                };
+
+                row.innerHTML = `
+                    <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
+                    <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
+                    <td class="oracle-address">
+                        <a href="${getXgovExplorerUrl(chainData.chain, chainData.verifier)}" target="_blank">
+                            ${chainData.verifier}
+                        </a>
+                    </td>
+                    <td class="nonce">${formatNonce(chainData.chainNonces.ownership, chainData.ethereumNonces.ownership)}</td>
+                    <td class="nonce">${formatNonce(chainData.chainNonces.parameter, chainData.ethereumNonces.parameter)}</td>
+                    <td class="nonce">${formatNonce(chainData.chainNonces.emergency, chainData.ethereumNonces.emergency)}</td>
+                `;
+                
+                if (chainData.isOutdated) {
+                    row.className = 'outdated-row';
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Fetch veCRV total supply from Ethereum
+        async function fetchEthereumVecrvTotalSupply() {
+            try {
+                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const vecrvContract = new ethers.Contract('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2', vecrvABI, mainProvider);
+                const totalSupply = await vecrvContract.totalSupply();
+                return Math.floor(parseFloat(ethers.utils.formatUnits(totalSupply, 18)));
+            } catch (error) {
+                console.error('Error fetching Ethereum veCRV total supply:', error);
+                return null;
+            }
+        }
+
+        // Fetch veCRV total supply from chain oracle
+        async function fetchChainVecrvTotalSupply(chain, oracleAddress) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const oracleContract = new ethers.Contract(oracleAddress, vecrvABI, chainProvider);
+                const totalSupply = await oracleContract.totalSupply();
+                return Math.floor(parseFloat(ethers.utils.formatUnits(totalSupply, 18)));
+            } catch (error) {
+                console.error(`Error fetching veCRV total supply for ${chain}:`, error);
+                return null;
+            }
+        }
+
+        // Fetch chain ID from network for veCRV
+        async function fetchVecrvChainId(chain) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const network = await chainProvider.getNetwork();
+                return network.chainId;
+            } catch (error) {
+                console.error(`Error fetching chain ID for ${chain}:`, error);
+                return null;
+            }
+        }
+
+        async function loadVecrvData() {
+            console.log('Loading veCRV data...');
+            
+            // Fetch Ethereum total supply first
+            const ethereumTotalSupply = await fetchEthereumVecrvTotalSupply();
+            console.log('Ethereum total supply:', ethereumTotalSupply);
+            
+            // Update Ethereum display
+            const ethereumDisplay = document.getElementById('ethereum-totalsupply');
+            ethereumDisplay.textContent = ethereumTotalSupply !== null ? ethereumTotalSupply.toLocaleString() : '--';
+            
+            // Populate table
+            const tableBody = document.getElementById('vecrv-table-body');
+            tableBody.innerHTML = '';
+
+            const data = { ethereumTotalSupply, chains: [] };
+
+            console.log('veCRV deployments:', Object.keys(vecrvDeployments).length);
+
+            // Create all rows first with loading state
+            const vecrvRows = [];
+            for (const [chain, chainData] of Object.entries(vecrvDeployments)) {
+                console.log(`Processing veCRV chain: ${chain}`);
+                const row = document.createElement('tr');
+                
+                // Show loading state
+                row.innerHTML = `
+                    <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
+                    <td class="chain-id">Loading...</td>
+                    <td class="oracle-address">
+                        <a href="${getVecrvExplorerUrl(chain, chainData.vecrv_oracle)}" target="_blank">
+                            ${chainData.vecrv_oracle}
+                        </a>
+                    </td>
+                    <td class="total-supply">Loading...</td>
+                `;
+                tableBody.appendChild(row);
+                vecrvRows.push({ row, chain, chainData });
+            }
+
+            // Now fetch all data in parallel
+            const vecrvFetchPromises = vecrvRows.map(async ({ row, chain, chainData }) => {
+                try {
+                    // Fetch actual chain ID from network
+                    const actualChainId = await fetchVecrvChainId(chain);
+                    console.log(`Chain ID for ${chain}:`, actualChainId);
+                    
+                    // Fetch total supply from chain oracle
+                    const chainTotalSupply = await fetchChainVecrvTotalSupply(chain, chainData.vecrv_oracle);
+                    console.log(`Total supply for ${chain}:`, chainTotalSupply);
+                    
+                    // Update row with real data
+                    const cells = row.cells;
+                    cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
+                    cells[3].textContent = chainTotalSupply !== null ? chainTotalSupply.toLocaleString() : '--'; // Total Supply
+
+                    // Add to data cache
+                    data.chains.push({ 
+                        chain, 
+                        chainId: actualChainId, 
+                        totalSupply: chainTotalSupply, 
+                        oracle: chainData.vecrv_oracle 
+                    });
+                } catch (error) {
+                    console.error(`Error processing veCRV ${chain}:`, error);
+                    // Update row with error state
+                    const cells = row.cells;
+                    cells[1].textContent = 'Error';
+                    cells[3].textContent = 'Error';
+                }
+            });
+
+            // Wait for all data to load
+            await Promise.all(vecrvFetchPromises);
+
+            console.log('Final veCRV data cache:', data);
+            // Cache the data
+            vecrvCache = data;
+        }
+
+        function displayVecrvData(data) {
+            // Update Ethereum display
+            const ethereumDisplay = document.getElementById('ethereum-totalsupply');
+            ethereumDisplay.textContent = data.ethereumTotalSupply !== null ? data.ethereumTotalSupply.toLocaleString() : '--';
+            
+            // Populate table
+            const tableBody = document.getElementById('vecrv-table-body');
+            tableBody.innerHTML = '';
+
+            data.chains.forEach(chainData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
+                    <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
+                    <td class="oracle-address">
+                        <a href="${getVecrvExplorerUrl(chainData.chain, chainData.oracle)}" target="_blank">
+                            ${chainData.oracle}
+                        </a>
+                    </td>
+                    <td class="total-supply">${chainData.totalSupply !== null ? chainData.totalSupply.toLocaleString() : '--'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function refreshData() {
+            // Clear all caches
+            scrvusdCache = null;
+            vecrvCache = null;
+            xgovCache = null;
+            addressCache = {};
+
+            // Reload data based on current tab
+            if (currentTab === 'scrvusd') {
+                loadScrvusdData();
+            } else if (currentTab === 'vecrv') {
+                loadVecrvData();
+                // If there's a current address being displayed, reload its data too
+                const addressInput = document.getElementById('address-input');
+                const currentAddress = addressInput.value.trim();
+                if (currentAddress && document.getElementById('address-balance').style.display !== 'none') {
+                    checkAddress(currentAddress);
+                }
+            } else if (currentTab === 'xgov') {
+                loadXgovData();
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                console.log('Initializing dashboard...');
+                
+                loadScrvusdData();
+                console.log('scrvUSD data loaded');
+                
+                loadVecrvData(); // Pre-load veCRV data
+                console.log('veCRV data loaded');
+                
+                loadXgovData(); // Pre-load xGov data
+                console.log('xGov data loaded');
+                
+                // Initialize address input functionality
+                initAddressInput();
+                console.log('Address input initialized');
+                
+                console.log('Dashboard initialization complete');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        });
+
+        // Initialize address input functionality
+        function initAddressInput() {
+            const input = document.getElementById('address-input');
+            const button = document.getElementById('check-address-btn');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+            // Show dropdown when input is focused
+            input.addEventListener('focus', function() {
+                dropdownMenu.classList.add('show');
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+
+            // Handle dropdown item selection
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const address = this.getAttribute('data-address');
+                    input.value = address;
+                    dropdownMenu.classList.remove('show');
+                });
+            });
+
+            // Handle button click
+            button.addEventListener('click', function() {
+                const address = input.value.trim();
+                if (address) {
+                    checkAddress(address);
+                }
+            });
+
+            // Handle Enter key in input
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const address = this.value.trim();
+                    if (address) {
+                        checkAddress(address);
+                    }
+                }
+            });
+        }
+
+        // Check address function
+        async function checkAddress(address) {
+            console.log('Checking address:', address);
+            
+            // Check if we have cached data for this address
+            if (addressCache[address]) {
+                displayAddressData(address, addressCache[address]);
+                return;
+            }
+            
+            // Fetch Ethereum veCRV balance
+            const ethereumBalance = await fetchEthereumVecrvBalance(address);
+            const balanceDisplay = document.getElementById('balance-amount');
+            balanceDisplay.textContent = ethereumBalance !== null ? ethereumBalance.toLocaleString() : '--';
+            
+            // Populate delegation table
+            const delegationData = await loadDelegationData(address);
+            
+            // Cache the data
+            addressCache[address] = { ethereumBalance, delegationData };
+        }
+
+        function displayAddressData(address, data) {
+            // Update balance display
+            const balanceDisplay = document.getElementById('balance-amount');
+            balanceDisplay.textContent = data.ethereumBalance !== null ? data.ethereumBalance.toLocaleString() : '--';
+            
+            // Display delegation table
+            displayDelegationTable(data.delegationData);
+        }
+
+        function displayDelegationTable(delegationData) {
+            const tableBody = document.getElementById('delegation-table-body');
+            tableBody.innerHTML = '';
+
+            delegationData.forEach(chainData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
+                    <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
+                    <td class="delegation-cell">${chainData.ethereumDelegation || '--'}</td>
+                    <td class="delegation-cell">${chainData.chainDelegation || '--'}</td>
+                    <td class="balance">${chainData.chainBalance !== null ? chainData.chainBalance.toLocaleString() : '--'}</td>
+                `;
+                
+                if (chainData.isMismatch) {
+                    row.className = 'delegation-mismatch';
+                }
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Fetch veCRV balance from Ethereum
+        async function fetchEthereumVecrvBalance(address) {
+            try {
+                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const vecrvContract = new ethers.Contract('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2', vecrvABI, mainProvider);
+                const balance = await vecrvContract.balanceOf(address);
+                return Math.floor(parseFloat(ethers.utils.formatUnits(balance, 18)));
+            } catch (error) {
+                console.error('Error fetching Ethereum veCRV balance:', error);
+                return null;
+            }
+        }
+
+        // Fetch delegation from Ethereum Delegate contract
+        async function fetchEthereumDelegation(chainId, address) {
+            try {
+                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const delegateContract = new ethers.Contract('0xde1e6A7E8297076f070E857130E593107A0E0cF5', delegateABI, mainProvider);
+                const delegated = await delegateContract.delegated(chainId, address);
+                const zeroAddress = '0x0000000000000000000000000000000000000000';
+                return (delegated === zeroAddress || delegated.toLowerCase() === address.toLowerCase()) ? 'self' : delegated;
+            } catch (error) {
+                console.error(`Error fetching Ethereum delegation for chain ${chainId}:`, error);
+                return null;
+            }
+        }
+
+        // Fetch delegation from chain oracle
+        async function fetchChainDelegation(chain, address) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const oracleContract = new ethers.Contract(vecrvDeployments[chain].vecrv_oracle, vecrvOracleABI, chainProvider);
+                const delegated = await oracleContract.delegated(address);
+                const zeroAddress = '0x0000000000000000000000000000000000000000';
+                return (delegated === zeroAddress || delegated.toLowerCase() === address.toLowerCase()) ? 'self' : delegated;
+            } catch (error) {
+                console.error(`Error fetching chain delegation for ${chain}:`, error);
+                return null;
+            }
+        }
+
+        // Fetch balance from chain oracle
+        async function fetchChainBalance(chain, address) {
+            try {
+                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const oracleContract = new ethers.Contract(vecrvDeployments[chain].vecrv_oracle, vecrvOracleABI, chainProvider);
+                const balance = await oracleContract.balanceOf(address);
+                return Math.floor(parseFloat(ethers.utils.formatUnits(balance, 18)));
+            } catch (error) {
+                console.error(`Error fetching chain balance for ${chain}:`, error);
+                return null;
+            }
+        }
+
+        async function loadDelegationData(address) {
+            const tableBody = document.getElementById('delegation-table-body');
+            tableBody.innerHTML = '';
+
+            const delegationData = [];
+
+            // Create all rows first with loading state
+            const delegationRows = [];
+            for (const [chain, data] of Object.entries(vecrvDeployments)) {
+                const row = document.createElement('tr');
+                
+                // Show loading state
+                row.innerHTML = `
+                    <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
+                    <td class="chain-id">Loading...</td>
+                    <td class="delegation-cell">Loading...</td>
+                    <td class="delegation-cell">Loading...</td>
+                    <td class="balance">Loading...</td>
+                `;
+                tableBody.appendChild(row);
+                delegationRows.push({ row, chain, data });
+            }
+
+            // Now fetch all data in parallel
+            const delegationFetchPromises = delegationRows.map(async ({ row, chain, data }) => {
+                // Fetch actual chain ID from network
+                const actualChainId = await fetchVecrvChainId(chain);
+                
+                // Fetch delegations
+                const ethereumDelegation = await fetchEthereumDelegation(actualChainId || 0, address);
+                const chainDelegation = await fetchChainDelegation(chain, address);
+                
+                // Determine which address to use for balance
+                const balanceAddress = (chainDelegation && chainDelegation !== 'self') ? chainDelegation : address;
+                const chainBalance = await fetchChainBalance(chain, balanceAddress);
+                
+                // Update row with real data
+                const cells = row.cells;
+                cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
+                cells[2].textContent = ethereumDelegation || '--'; // Ethereum delegation
+                cells[3].textContent = chainDelegation || '--'; // Chain delegation
+                cells[4].textContent = chainBalance !== null ? chainBalance.toLocaleString() : '--'; // Balance
+
+                // Check if delegations don't match and highlight row
+                const isMismatch = ethereumDelegation && chainDelegation && 
+                    ethereumDelegation.toLowerCase() !== chainDelegation.toLowerCase();
+                if (isMismatch) {
+                    row.className = 'delegation-mismatch';
+                }
+
+                // Add to delegation data
+                delegationData.push({
+                    chain,
+                    chainId: actualChainId,
+                    ethereumDelegation,
+                    chainDelegation,
+                    chainBalance,
+                    isMismatch
+                });
+            });
+
+            // Wait for all data to load
+            await Promise.all(delegationFetchPromises);
+
+            return delegationData;
+        }
+    </script>
+</body>
+</html> 
