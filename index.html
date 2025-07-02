@@ -738,42 +738,53 @@
         let signer = null;
         let walletConnected = false;
 
+        // Unified RPC endpoints configuration
+        const RPC_ENDPOINTS = {
+            "ethereum": "https://eth.llamarpc.com",
+            "optimism": "https://mainnet.optimism.io",
+            "base": "https://mainnet.base.org",
+            "fraxtal": "https://rpc.frax.com",
+            "mantle": "https://rpc.mantle.xyz",
+            "taiko": "https://rpc.taiko.xyz",
+            "sonic": "https://rpc.soniclabs.com"
+        };
+
         // Deployment addresses
         const deployments = {
             "optimism": {
                 "scrvusd_oracle": "0x5dCaC7D564672e3D1e09B2560a545f57B9A5C6eE",
                 "explorer": "https://optimistic.etherscan.io",
-                "rpc": "https://mainnet.optimism.io",
+                "rpc": RPC_ENDPOINTS.optimism,
                 "version": "v2"
             },
             "sonic": {
                 "scrvusd_oracle": "0x38AEE71610a3683a4c6e6e691f26365C6f123cf8",
                 "explorer": "https://sonicscan.org",
-                "rpc": "https://rpc.soniclabs.com",
+                "rpc": RPC_ENDPOINTS.sonic,
                 "version": "v2"
             },
             "base-deprecated": {
                 "scrvusd_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1",
                 "explorer": "https://basescan.org",
-                "rpc": "https://mainnet.base.org",
+                "rpc": RPC_ENDPOINTS.base,
                 "version": "v0"
             },
             "fraxtal-deprecated": {
                 "scrvusd_oracle": "0x09F8D940EAD55853c51045bcbfE67341B686C071",
                 "explorer": "https://fraxscan.com",
-                "rpc": "https://rpc.frax.com",
+                "rpc": RPC_ENDPOINTS.fraxtal,
                 "version": "v0"
             },
             "mantle-deprecated": {
                 "scrvusd_oracle": "0xbD2775B8eADaE81501898eB208715f0040E51882",
                 "explorer": "https://mantlescan.xyz",
-                "rpc": "https://rpc.mantle.xyz",
+                "rpc": RPC_ENDPOINTS.mantle,
                 "version": "v0"
             },
             "taiko-deprecated": {
                 "scrvusd_oracle": "0x070A5C8a99002F50C18B52B90e938BC477611b16",
                 "explorer": "https://taikoscan.io",
-                "rpc": "https://rpc.taiko.xyz",
+                "rpc": RPC_ENDPOINTS.taiko,
                 "version": "v1"
             }
         };
@@ -783,7 +794,7 @@
             "sonic": {
                 "verifier": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
                 "explorer": "https://sonicscan.org",
-                "rpc": "https://rpc.soniclabs.com",
+                "rpc": RPC_ENDPOINTS.sonic,
                 "chainId": 146 // Sonic chain ID
             }
         };
@@ -793,32 +804,32 @@
             "optimism": {
                 "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d",
                 "explorer": "https://optimistic.etherscan.io",
-                "rpc": "https://mainnet.optimism.io"
+                "rpc": RPC_ENDPOINTS.optimism
             },
             "base": {
                 "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412",
                 "explorer": "https://basescan.org",
-                "rpc": "https://mainnet.base.org"
+                "rpc": RPC_ENDPOINTS.base
             },
             "fraxtal": {
                 "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
                 "explorer": "https://fraxscan.com",
-                "rpc": "https://rpc.frax.com"
+                "rpc": RPC_ENDPOINTS.fraxtal
             },
             "mantle": {
                 "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5",
                 "explorer": "https://mantlescan.xyz",
-                "rpc": "https://rpc.mantle.xyz"
+                "rpc": RPC_ENDPOINTS.mantle
             },
             "taiko": {
                 "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30",
                 "explorer": "https://taikoscan.io",
-                "rpc": "https://rpc.taiko.xyz"
+                "rpc": RPC_ENDPOINTS.taiko
             },
             "sonic": {
                 "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d",
                 "explorer": "https://sonicscan.org",
-                "rpc": "https://rpc.soniclabs.com"
+                "rpc": RPC_ENDPOINTS.sonic
             }
         };
 
@@ -1115,7 +1126,7 @@
         // Fetch main scrvUSD price from Ethereum
         async function fetchMainScrvusdPrice() {
             try {
-                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainProvider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ethereum);
                 const mainContract = new ethers.Contract('0x0655977FEb2f289A4aB78af67BAB0d17aAb84367', scrvusdABI, mainProvider);
                 const price = await mainContract.pricePerShare();
                 return parseFloat(ethers.utils.formatUnits(price, 18));
@@ -1491,7 +1502,7 @@
         // Fetch nonces from Ethereum broadcaster for a specific chain
         async function fetchEthereumNoncesForChain(chainId) {
             try {
-                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainProvider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ethereum);
                 const broadcasterContract = new ethers.Contract('0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc', broadcasterABI, mainProvider);
                 
                 const [ownershipNonce, parameterNonce, emergencyNonce] = await Promise.all([
@@ -1655,7 +1666,7 @@
         // Fetch veCRV total supply from Ethereum
         async function fetchEthereumVecrvTotalSupply() {
             try {
-                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainProvider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ethereum);
                 const vecrvContract = new ethers.Contract('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2', vecrvABI, mainProvider);
                 const totalSupply = await vecrvContract.totalSupply();
                 return Math.floor(parseFloat(ethers.utils.formatUnits(totalSupply, 18)));
@@ -1945,7 +1956,7 @@
         // Fetch veCRV balance from Ethereum
         async function fetchEthereumVecrvBalance(address) {
             try {
-                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainProvider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ethereum);
                 const vecrvContract = new ethers.Contract('0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2', vecrvABI, mainProvider);
                 const balance = await vecrvContract.balanceOf(address);
                 return Math.floor(parseFloat(ethers.utils.formatUnits(balance, 18)));
@@ -1958,7 +1969,7 @@
         // Fetch delegation from Ethereum Delegate contract
         async function fetchEthereumDelegation(chainId, address) {
             try {
-                const mainProvider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
+                const mainProvider = new ethers.providers.JsonRpcProvider(RPC_ENDPOINTS.ethereum);
                 const delegateContract = new ethers.Contract('0xde1e6A7E8297076f070E857130E593107A0E0cF5', delegateABI, mainProvider);
                 const delegated = await delegateContract.delegated(chainId, address);
                 const zeroAddress = '0x0000000000000000000000000000000000000000';
