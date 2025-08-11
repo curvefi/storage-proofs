@@ -1,6 +1,7 @@
 [submodule "contracts/xdao"]
 	path = contracts/xdao
 	url = https://github.com/curvefi/curve-xdao.git
+	branch = master
 [submodule "tests/scrvusd/contracts/scrvusd"]
 	path = tests/scrvusd/contracts/scrvusd
 	url = https://github.com/curvefi/scrvusd.git
