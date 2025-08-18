@@ -45,8 +45,8 @@ contract MessageDigestVerifier {
     /// Verify a message digest and optionally execute.
     /// @param _agent The agent which produced the execution digest. (1 = OWNERSHIP, 2 = PARAMETER, 4 = EMERGENCY)
     /// @param _messages The sequence of messages to execute.
-    /// @param _block_header_rlp The block header of any block in which the gauge has its type set.
-    /// @param _proof_rlp The state proof of the gauge types.
+    /// @param _block_header_rlp The block header of any block in which messages are broadcasted.
+    /// @param _proof_rlp The state proof of messages digest.
     function verifyMessagesByBlockHash(
         uint256 _agent,
         IRelayer.Message[] memory _messages,
@@ -71,7 +71,7 @@ contract MessageDigestVerifier {
     /// @param _agent The agent which produced the execution digest. (1 = OWNERSHIP, 2 = PARAMETER, 4 = EMERGENCY)
     /// @param _messages The sequence of messages to execute.
     /// @param _block_number Number of the block to use state root hash.
-    /// @param _proof_rlp The state proof of the gauge types.
+    /// @param _proof_rlp The state proof of messages digest.
     function verifyMessagesByStateRoot(
         uint256 _agent,
         IRelayer.Message[] memory _messages,
