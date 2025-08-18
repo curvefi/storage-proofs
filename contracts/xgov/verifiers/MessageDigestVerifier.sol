@@ -24,6 +24,8 @@ contract MessageDigestVerifier {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
+    event Verify(uint256 indexed agent, IRelayer.Message[] messages);
+
     address constant BROADCASTER = 0x7BA33456EC00812C6B6BB6C1C3dfF579c34CC2cc;
     bytes32 constant BROADCASTER_HASH =
         keccak256(abi.encodePacked(BROADCASTER));
@@ -158,5 +160,6 @@ contract MessageDigestVerifier {
         if (block.timestamp <= deadline.value) {
             IRelayer(RELAYER).relay(_agent, _messages);
         }
+        emit Verify(_agent, _messages);
     }
 }
