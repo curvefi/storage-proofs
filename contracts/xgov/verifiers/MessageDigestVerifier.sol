@@ -40,6 +40,8 @@ contract MessageDigestVerifier {
     mapping (uint256 => uint256) public nonce;
 
     constructor(address _block_hash_oracle, address _relayer) {
+        require(_block_hash_oracle != address(0), "Bad Blockhash Oracle");
+        require(_relayer != address(0), "Bad Relayer");
         BLOCK_HASH_ORACLE = _block_hash_oracle;
         RELAYER = _relayer;
     }
