@@ -81,6 +81,7 @@ contract MessageDigestVerifier {
         bytes memory _proof_rlp
     ) external {
         bytes32 state_root = IBlockHashOracle(BLOCK_HASH_ORACLE).get_state_root(_block_number);
+        require(state_root != bytes32(0)); // dev: invalid stateroot
 
         _verifyMessages(_agent, _messages, state_root, _proof_rlp);
     }
