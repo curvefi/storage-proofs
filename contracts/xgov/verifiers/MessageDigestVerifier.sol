@@ -60,13 +60,14 @@ contract MessageDigestVerifier {
         Verifier.BlockHeader memory block_header = Verifier.parseBlockHeader(
             _block_header_rlp
         );
-        require(block_header.hash != bytes32(0)); // dev: invalid blockhash
+        require(block_header.hash != bytes32(0), "Invalid blockhash");
         require(
             block_header.hash ==
                 IBlockHashOracle(BLOCK_HASH_ORACLE).get_block_hash(
                     block_header.number
-                )
-        ); // dev: blockhash mismatch
+                ),
+            "Blockhash mismatch"
+        );
 
         _verifyMessages(_agent, _messages, block_header.stateRootHash, _proof_rlp);
     }
@@ -83,7 +84,7 @@ contract MessageDigestVerifier {
         bytes memory _proof_rlp
     ) external {
         bytes32 state_root = IBlockHashOracle(BLOCK_HASH_ORACLE).get_state_root(_block_number);
-        require(state_root != bytes32(0)); // dev: invalid stateroot
+        require(state_root != bytes32(0), "Invalid stateroot");
 
         _verifyMessages(_agent, _messages, state_root, _proof_rlp);
     }
@@ -97,13 +98,14 @@ contract MessageDigestVerifier {
         require(
             _agent == OWNERSHIP_AGENT ||
                 _agent == PARAMETER_AGENT ||
-                _agent == EMERGENCY_AGENT
+                _agent == EMERGENCY_AGENT,
+            "Invalid agent"
         );
-        require(_messages.length != 0);
+        require(_messages.length != 0, "Empty messages");
 
         // convert _proof_rlp into a list of `RLPItem`s
         RLPReader.RLPItem[] memory proofs = _proof_rlp.toRlpItem().toList();
-        require(proofs.length == 3); // dev: invalid number of proofs
+        require(proofs.length == 3, "Invalid number of proofs");
 
         // 0th proof is the account proof for the Broadcaster contract
         Verifier.Account memory account = Verifier.extractAccountFromProof(
@@ -111,7 +113,7 @@ contract MessageDigestVerifier {
             _state_root,
             proofs[0].toList()
         );
-        require(account.exists); // dev: Broadcaster account does not exist
+        require(account.exists, "Broadcaster account does not exist");
 
         uint256 cur_nonce = nonce[_agent];
 
@@ -135,8 +137,8 @@ contract MessageDigestVerifier {
             proofs[1].toList()
         );
 
-        require(slot.exists && slot.value != 0);
-        require(keccak256(abi.encode(_messages)) == bytes32(slot.value));
+        require(slot.exists && slot.value != 0, "Bad digest slot value");
+        require(keccak256(abi.encode(_messages)) == bytes32(slot.value), "Digest not matched");
 
         Verifier.SlotValue memory deadline = Verifier.extractSlotValueFromProof(
             keccak256(
@@ -157,7 +159,7 @@ contract MessageDigestVerifier {
             account.storageRoot,
             proofs[2].toList()
         );
-        require(deadline.exists && deadline.value != 0);
+        require(deadline.exists && deadline.value != 0, "Bad deadline slot value");
 
         ++nonce[_agent];
         if (block.timestamp <= deadline.value) {
