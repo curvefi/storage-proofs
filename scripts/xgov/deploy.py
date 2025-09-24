@@ -30,9 +30,19 @@ l2_web3 = Web3(
 )
 
 
-def deploy(boracle, relayer):
+def deploy(boracle):
+    agent = boa.load_partial(
+        "tests/xgov/contracts/curve-xgov/contracts/Agent.vy"
+    ).deploy_as_blueprint()
+    relayer = boa.load_partial(
+        "tests/xgov/contracts/curve-xgov/contracts/xyz/XYZRelayer.vy"
+    ).deploy(agent, boa.env.eoa)
+    vault = boa.load_partial("tests/xgov/contracts/curve-xgov/contracts/Vault.vy").deploy(
+        relayer.OWNERSHIP_AGENT()
+    )
+
     verifier = boa_solidity.load_partial_solc(
-        "contracts/xdao/contracts/verifiers/MessageDigestVerifier.sol",
+        "contracts/xgov/verifiers/MessageDigestVerifier.sol",
         compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
@@ -40,7 +50,24 @@ def deploy(boracle, relayer):
             "evm_version": "paris",
             "import_remappings": "hamdiallam/Solidity-RLP@2.0.7=/Users/romanagureev/.brownie/packages/hamdiallam/Solidity-RLP@2.0.7",
         },
-    ).deploy(boracle, relayer)
+    ).deploy(boracle, relayer.address)
+
+    relayer.relay(
+        1,  # owner
+        [(relayer.address, relayer.set_messenger.prepare_calldata(verifier))],
+    )
+    assert relayer.messenger() == verifier.address
+
+    print(
+        f"Relayer: {relayer.address}\n"
+        f"- owner: {relayer.OWNERSHIP_AGENT()}\n"
+        f"- parameter: {relayer.PARAMETER_AGENT()}\n"
+        f"- emergency: {relayer.EMERGENCY_AGENT()}\n"
+        f"Vault: {vault.address}\n"
+        "\n"
+        f"Agent: {agent.address}\n"
+        f"Verifier: {verifier.address}\n"
+    )
     return verifier
 
 
@@ -87,13 +114,13 @@ def account_load(fname):
 
 if __name__ == "__main__":
     # send_blockhash()
-    # boa.fork(NETWORK, block_identifier='latest')
-    # boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
-    boa.set_network_env(NETWORK)
-    boa.env.add_account(account_load("curve"))
+    boa.fork(NETWORK, block_identifier="latest")
+    boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
+    # boa.set_network_env(NETWORK)
+    # boa.env.add_account(account_load("curve"))
+
     verifier = deploy(
-        "0x7cDe6Ef7e2e2FD3B6355637F1303586D7262ba37",
-        "0x37b6d6d425438a9f8e40C8B4c06c10560967b678",
+        "0xb10cface69821Ff7b245Cf5f28f3e714fDbd86b8",
     )
     # simulate(
     #     "0x37b6d6d425438a9f8e40C8B4c06c10560967b678",
