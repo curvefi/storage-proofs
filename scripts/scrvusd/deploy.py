@@ -31,13 +31,13 @@ l2_web3 = Web3(
 
 
 def deploy():
-    boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").deploy()
-    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV1.vy").deploy(
-        10**18, 10**13
-    )
+    boracle = boa.load_partial("contracts/blockhash/OptimismBlockHashOracle.vy").at(
+        "0xb10cface69821Ff7b245Cf5f28f3e714fDbd86b8"
+    )  # .deploy()
+    soracle = boa.load_partial("contracts/scrvusd/oracles/ScrvusdOracleV2.vy").deploy(107 * 10**16)
 
     verifier = boa_solidity.load_partial_solc(
-        "contracts/scrvusd/verifiers/ScrvusdVerifier.sol",
+        "contracts/scrvusd/verifiers/ScrvusdVerifierV2.sol",
         compiler_args={
             "solc_version": "0.8.18",
             "optimize": True,
@@ -47,7 +47,11 @@ def deploy():
         },
     ).deploy(boracle.address, soracle.address)
 
-    soracle.set_verifier(verifier)
+    soracle.grantRole(soracle.PRICE_PARAMETERS_VERIFIER(), verifier)
+    soracle.grantRole(soracle.UNLOCK_TIME_VERIFIER(), verifier)
+
+    # soracle.grantRole(soracle.DEFAULT_ADMIN_ROLE(), "xgov owner")
+    # soracle.revokeRole(soracle.DEFAULT_ADMIN_ROLE())
 
     return boracle, soracle, verifier
 
@@ -84,5 +88,5 @@ if __name__ == "__main__":
     boa.env.eoa = "0x71F718D3e4d1449D1502A6A7595eb84eBcCB1683"
     # boa.set_network_env(NETWORK)
     # boa.env.add_account(account_load('curve'))
-    boracle, soracle, prover = deploy()
-    simulate(boracle, soracle, prover)
+    boracle, soracle, verifier = deploy()
+    # simulate(boracle, soracle, prover)
