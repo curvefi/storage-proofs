@@ -538,6 +538,25 @@
         .delegation-mismatch .delegation-cell {
             color: #ff6b6b;
         }
+
+        /* Compact address cell with copy */
+        .address-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .address-trunc {
+            font-family: 'Courier New', monospace;
+            color: #aaa;
+        }
+        .address-link {
+            color: #4ea1ff;
+            text-decoration: none;
+        }
+        .address-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -759,6 +778,12 @@
                 "scrvusd_oracle": "0x5dCaC7D564672e3D1e09B2560a545f57B9A5C6eE",
                 "explorer": "https://optimistic.etherscan.io",
                 "rpc": RPC_ENDPOINTS.optimism,
+                "version": "v2"
+            },
+            "arbitrum": {
+                "scrvusd_oracle": "0xAeB976BB02b5c36DcD57372a3B18326BfA4983C8",
+                "explorer": "https://arbiscan.io",
+                "rpc": RPC_ENDPOINTS.arbitrum,
                 "version": "v2"
             },
             "sonic": {
@@ -1146,6 +1171,27 @@
                 return `${vecrvDeployments[chain].explorer}/address/${address}`;
             }
             return `https://etherscan.io/address/${address}`;
+        }
+
+        // Helpers for rendering compact addresses with copy
+        function truncateAddress(addr, front=6, back=6) {
+            if (!addr || addr === '--' || addr === 'self') return addr;
+            const a = addr.toString();
+            if (!a.startsWith('0x') || a.length <= (2 + front + back)) return a;
+            return `0x${a.slice(2, 2 + front)}...${a.slice(-back)}`;
+        }
+
+        function renderDelegationCell(chain, value) {
+            if (!value) return '--';
+            if (value === 'self') return 'self';
+            const full = value;
+            const short = truncateAddress(full);
+            const href = getVecrvExplorerUrl(chain, full);
+            return `
+                <span class="address-wrap">
+                    <a class="address-link address-trunc" href="${href}" target="_blank" rel="noopener noreferrer" title="${full}">${short}</a>
+                </span>
+            `;
         }
 
         // Fetch main scrvUSD price from Ethereum
@@ -1965,8 +2011,8 @@
                 row.innerHTML = `
                     <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
                     <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
-                    <td class="delegation-cell">${chainData.ethereumDelegation || '--'}</td>
-                    <td class="delegation-cell">${chainData.chainDelegation || '--'}</td>
+                    <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.ethereumDelegation)}</td>
+                    <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.chainDelegation)}</td>
                     <td class="balance">${chainData.chainBalance !== null ? chainData.chainBalance.toLocaleString() : '--'}</td>
                 `;
                 
@@ -2071,8 +2117,8 @@
                 // Update row with real data
                 const cells = row.cells;
                 cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
-                cells[2].textContent = ethereumDelegation || '--'; // Ethereum delegation
-                cells[3].textContent = chainDelegation || '--'; // Chain delegation
+                cells[2].innerHTML = renderDelegationCell(chain, ethereumDelegation); // Ethereum delegation (link uses chain)
+                cells[3].innerHTML = renderDelegationCell(chain, chainDelegation); // Chain delegation
                 cells[4].textContent = chainBalance !== null ? chainBalance.toLocaleString() : '--'; // Balance
 
                 // Check if delegations don't match and highlight row
@@ -2098,6 +2144,8 @@
 
             return delegationData;
         }
+
+        // No global copy handler needed; addresses are links
     </script>
 </body>
 </html> 
