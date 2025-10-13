@@ -766,60 +766,83 @@
             "mantle": "https://rpc.mantle.xyz",
             "taiko": "https://rpc.taiko.xyz",
             "sonic": "https://rpc.soniclabs.com",
-            "xdc": "https://rpc.xdcrpc.com",
+            "xdc": "https://rpc.xdc.org",
             "arbitrum": "https://arb1.arbitrum.io/rpc",
             "gnosis": "https://rpc.gnosischain.com",
-            "bsc": "https://bsc-dataseed.binance.org"
+            "bsc": "https://bsc-dataseed.binance.org",
+            "polygon": "https://polygon-rpc.com",
+            "avalanche": "https://api.avax.network/ext/bc/C/rpc",
+            "aurora": "https://mainnet.aurora.dev",
+            "etherlink": "https://node.mainnet.etherlink.com",
+            "hyper": "https://rpc.hyperliquid.xyz/evm",
+            "tac": "https://rpc.tac.build",
+            "corn": "https://mainnet.corn-rpc.com",
+            "ink": "https://rpc-qnd.inkonchain.com",
+            "plasma": "https://rpc.plasma.to",
+            "plume": "https://rpc.plume.org"
         };
 
-        // Deployment addresses
-        const deployments = {
+        // Unified Explorer base URLs
+        const EXPLORER_URLS = {
+            "ethereum": "https://etherscan.io",
+            "optimism": "https://optimistic.etherscan.io",
+            "base": "https://basescan.org",
+            "fraxtal": "https://fraxscan.com",
+            "mantle": "https://mantlescan.xyz",
+            "taiko": "https://taikoscan.io",
+            "sonic": "https://sonicscan.org",
+            "xdc": "https://xdcscan.com",
+            "arbitrum": "https://arbiscan.io",
+            "gnosis": "https://gnosisscan.io",
+            "bsc": "https://bscscan.com",
+            "polygon": "https://polygonscan.com",
+            "avalanche": "https://snowtrace.io",
+            "aurora": "https://explorer.aurora.dev",
+            "etherlink": "https://explorer.etherlink.com",
+            "hyper": "https://hyperevmscan.io",
+            "tac": "https://explorer.tac.build",
+            "corn": "https://cornscan.io",
+            "ink": "https://explorer.inkonchain.com",
+            "plasma": "https://plasmascan.to",
+            "plume": "https://explorer.plumenetwork.xyz"
+        };
+
+        function normalizeChainKey(chain) {
+            return (chain || '').replace(/-deprecated$/, '');
+        }
+
+        // scrvUSD deployments
+        const scrvusdDeployments = {
             "optimism": {
                 "scrvusd_oracle": "0x5dCaC7D564672e3D1e09B2560a545f57B9A5C6eE",
-                "explorer": "https://optimistic.etherscan.io",
-                "rpc": RPC_ENDPOINTS.optimism,
                 "version": "v2"
             },
             "arbitrum": {
                 "scrvusd_oracle": "0xAeB976BB02b5c36DcD57372a3B18326BfA4983C8",
-                "explorer": "https://arbiscan.io",
-                "rpc": RPC_ENDPOINTS.arbitrum,
                 "version": "v2"
             },
             "sonic": {
                 "scrvusd_oracle": "0x38AEE71610a3683a4c6e6e691f26365C6f123cf8",
-                "explorer": "https://sonicscan.org",
-                "rpc": RPC_ENDPOINTS.sonic,
                 "version": "v2"
             },
             "xdc": {
                 "scrvusd_oracle": "0x09F8D940EAD55853c51045bcbfE67341B686C071",
-                "explorer": "https://xdcscan.com",
-                "rpc": RPC_ENDPOINTS.xdc,
                 "version": "v2"
             },
             "base-deprecated": {
                 "scrvusd_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1",
-                "explorer": "https://basescan.org",
-                "rpc": RPC_ENDPOINTS.base,
                 "version": "v0"
             },
             "fraxtal-deprecated": {
                 "scrvusd_oracle": "0x09F8D940EAD55853c51045bcbfE67341B686C071",
-                "explorer": "https://fraxscan.com",
-                "rpc": RPC_ENDPOINTS.fraxtal,
                 "version": "v0"
             },
             "mantle-deprecated": {
                 "scrvusd_oracle": "0xbD2775B8eADaE81501898eB208715f0040E51882",
-                "explorer": "https://mantlescan.xyz",
-                "rpc": RPC_ENDPOINTS.mantle,
                 "version": "v0"
             },
             "taiko-deprecated": {
                 "scrvusd_oracle": "0x070A5C8a99002F50C18B52B90e938BC477611b16",
-                "explorer": "https://taikoscan.io",
-                "rpc": RPC_ENDPOINTS.taiko,
                 "version": "v1"
             }
         };
@@ -828,59 +851,73 @@
         const xgovDeployments = {
             "sonic": {
                 "verifier": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
-                "explorer": "https://sonicscan.org",
-                "rpc": RPC_ENDPOINTS.sonic,
-                "chainId": 146 // Sonic chain ID
+                "chainId": 146
+            },
+            "bsc": {
+                "verifier": "0x22D490A4E8710252793DF769cA01FA619aF81e64",
+                "chainId": 56
+            },
+            "gnosis": {
+                "verifier": "0x5dFAFdA4D5B26bE0e99e6A8C6B1eB97eD99B9bD3",
+                "chainId": 100
+            },
+            "polygon": {
+                "verifier": "0x47ca04Ee05f167583122833abfb0f14aC5677Ee4",
+                "chainId": 137
+            },
+            "avalanche": {
+                "verifier": "0xb1b9FB9e4501623B0491908740924E5d8201aCcf",
+                "chainId": 43114
+            },
+            "hyper": {
+                "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
+                "chainId": null
+            },
+            "plume": {
+                "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
+                "chainId": null
+            },
+            "plasma": {
+                "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
+                "chainId": null
+            },
+            "ink": {
+                "verifier": "0x3c0a405E914337139992625D5100Ea141a9C4d11",
+                "chainId": null
+            },
+            "corn": {
+                "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
+                "chainId": null
+            },
+            "aurora": {
+                "verifier": "0x6a2691068C7CbdA03292Ba0f9c77A25F658bAeF5",
+                "chainId": 1313161554
+            },
+            "xdc": {
+                "verifier": "0xC772063cE3e622B458B706Dd2e36309418A1aE42",
+                "chainId": 50
+            },
+            "etherlink": {
+                "verifier": "0x74d6aABD6197E83d963F0B48be9C034F93E8E66d",
+                "chainId": null
+            },
+            "tac": {
+                "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
+                "chainId": null
             }
         };
 
         // veCRV deployments
         const vecrvDeployments = {
-            "optimism": {
-                "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d",
-                "explorer": "https://optimistic.etherscan.io",
-                "rpc": RPC_ENDPOINTS.optimism
-            },
-            "base": {
-                "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412",
-                "explorer": "https://basescan.org",
-                "rpc": RPC_ENDPOINTS.base
-            },
-            "fraxtal": {
-                "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf",
-                "explorer": "https://fraxscan.com",
-                "rpc": RPC_ENDPOINTS.fraxtal
-            },
-            "mantle": {
-                "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5",
-                "explorer": "https://mantlescan.xyz",
-                "rpc": RPC_ENDPOINTS.mantle
-            },
-            "taiko": {
-                "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30",
-                "explorer": "https://taikoscan.io",
-                "rpc": RPC_ENDPOINTS.taiko
-            },
-            "sonic": {
-                "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d",
-                "explorer": "https://sonicscan.org",
-                "rpc": RPC_ENDPOINTS.sonic
-            },
-            "arbitrum": {
-                "vecrv_oracle": "0x4D1AF9911e4c19f64Be36c36EF39Fd026Bc9bb61",
-                "explorer": "https://arbiscan.io",
-                "rpc": RPC_ENDPOINTS.arbitrum
-            },
-            "gnosis": {
-                "vecrv_oracle": "0x2Fa3cbAc10f1Ec7618a383a005862D900b470334",
-                "explorer": "https://gnosisscan.io",
-                "rpc": RPC_ENDPOINTS.gnosis
-            },
-            "bsc": {
-                "vecrv_oracle": "0xA3ea433509F7941df3e33857D9c9f212Ad4A4e64",
-                "explorer": "https://bscscan.com",
-                "rpc": RPC_ENDPOINTS.bsc
-            }
+            "optimism": { "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d" },
+            "base": { "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412" },
+            "fraxtal": { "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf" },
+            "mantle": { "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5" },
+            "taiko": { "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30" },
+            "sonic": { "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d" },
+            "arbitrum": { "vecrv_oracle": "0x4D1AF9911e4c19f64Be36c36EF39Fd026Bc9bb61" },
+            "gnosis": { "vecrv_oracle": "0x2Fa3cbAc10f1Ec7618a383a005862D900b470334" },
+            "bsc": { "vecrv_oracle": "0xA3ea433509F7941df3e33857D9c9f212Ad4A4e64" }
         };
 
         // Agent types
@@ -1145,32 +1182,25 @@
             }
         }
 
+        function explorerBase(chain) {
+            const key = normalizeChainKey(chain);
+            return EXPLORER_URLS[key] || 'https://etherscan.io';
+        }
+
         function getExplorerUrl(chain, address) {
-            if (deployments[chain]) {
-                return `${deployments[chain].explorer}/address/${address}`;
-            }
-            return `https://etherscan.io/address/${address}`;
+            return `${explorerBase(chain)}/address/${address}`;
         }
 
         function getExplorerTxUrl(chain, txHash) {
-            if (deployments[chain]) {
-                return `${deployments[chain].explorer}/tx/${txHash}`;
-            }
-            return `https://etherscan.io/tx/${txHash}`;
+            return `${explorerBase(chain)}/tx/${txHash}`;
         }
 
         function getXgovExplorerUrl(chain, address) {
-            if (xgovDeployments[chain]) {
-                return `${xgovDeployments[chain].explorer}/address/${address}`;
-            }
-            return `https://etherscan.io/address/${address}`;
+            return `${explorerBase(chain)}/address/${address}`;
         }
 
         function getVecrvExplorerUrl(chain, address) {
-            if (vecrvDeployments[chain]) {
-                return `${vecrvDeployments[chain].explorer}/address/${address}`;
-            }
-            return `https://etherscan.io/address/${address}`;
+            return `${explorerBase(chain)}/address/${address}`;
         }
 
         // Helpers for rendering compact addresses with copy
@@ -1210,8 +1240,10 @@
         // Fetch oracle data for a specific chain
         async function fetchOracleData(chain, oracleAddress) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(deployments[chain].rpc);
-                const version = deployments[chain].version;
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
+                const version = scrvusdDeployments[chain].version;
                 
                 // Select appropriate ABI based on version
                 let oracleABI;
@@ -1355,8 +1387,8 @@
             const data = { mainPrice, chains: [] };
 
             // Separate active and deprecated deployments
-            const activeDeployments = Object.entries(deployments).filter(([chain, data]) => !chain.includes('-deprecated'));
-            const deprecatedDeployments = Object.entries(deployments).filter(([chain, data]) => chain.includes('-deprecated'));
+            const activeDeployments = Object.entries(scrvusdDeployments).filter(([chain, data]) => !chain.includes('-deprecated'));
+            const deprecatedDeployments = Object.entries(scrvusdDeployments).filter(([chain, data]) => chain.includes('-deprecated'));
 
             console.log('Active deployments:', activeDeployments.length);
             console.log('Deprecated deployments:', deprecatedDeployments.length);
@@ -1558,15 +1590,19 @@
             });
         }
 
-        // Fetch chain ID from network
+        // Fetch chain ID from network (fallback to configured chainId)
         async function fetchChainId(chain) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(xgovDeployments[chain].rpc);
+                const configured = xgovDeployments[chain] && xgovDeployments[chain].chainId;
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                if (!rpc) return configured || null;
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const network = await chainProvider.getNetwork();
-                return network.chainId;
+                return network.chainId || configured || null;
             } catch (error) {
                 console.error(`Error fetching chain ID for ${chain}:`, error);
-                return null;
+                return xgovDeployments[chain] && xgovDeployments[chain].chainId ? xgovDeployments[chain].chainId : null;
             }
         }
 
@@ -1596,7 +1632,9 @@
         // Fetch nonces from chain verifier
         async function fetchChainNonces(chain, verifierAddress) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(xgovDeployments[chain].rpc);
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const verifierContract = new ethers.Contract(verifierAddress, verifierABI, chainProvider);
                 
                 const [ownershipNonce, parameterNonce, emergencyNonce] = await Promise.all([
@@ -1651,7 +1689,8 @@
                 const actualChainId = await fetchChainId(chain);
                 
                 // Fetch reference nonces from Ethereum broadcaster for this chain
-                const ethereumNonces = await fetchEthereumNoncesForChain(data.chainId);
+                const broadcasterChainId = (data.chainId != null) ? data.chainId : actualChainId;
+                const ethereumNonces = await fetchEthereumNoncesForChain(broadcasterChainId);
                 
                 // Fetch actual nonces from chain verifier
                 const chainNonces = await fetchChainNonces(chain, data.verifier);
@@ -1750,7 +1789,9 @@
         // Fetch veCRV total supply from chain oracle
         async function fetchChainVecrvTotalSupply(chain, oracleAddress) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const oracleContract = new ethers.Contract(oracleAddress, vecrvABI, chainProvider);
                 const totalSupply = await oracleContract.totalSupply();
                 return Math.floor(parseFloat(ethers.utils.formatUnits(totalSupply, 18)));
@@ -1763,7 +1804,9 @@
         // Fetch chain ID from network for veCRV
         async function fetchVecrvChainId(chain) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const network = await chainProvider.getNetwork();
                 return network.chainId;
             } catch (error) {
@@ -2054,7 +2097,9 @@
         // Fetch delegation from chain oracle
         async function fetchChainDelegation(chain, address) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const oracleContract = new ethers.Contract(vecrvDeployments[chain].vecrv_oracle, vecrvOracleABI, chainProvider);
                 const delegated = await oracleContract.delegated(address);
                 const zeroAddress = '0x0000000000000000000000000000000000000000';
@@ -2068,7 +2113,9 @@
         // Fetch balance from chain oracle
         async function fetchChainBalance(chain, address) {
             try {
-                const chainProvider = new ethers.providers.JsonRpcProvider(vecrvDeployments[chain].rpc);
+                const key = normalizeChainKey(chain);
+                const rpc = RPC_ENDPOINTS[key];
+                const chainProvider = new ethers.providers.JsonRpcProvider(rpc);
                 const oracleContract = new ethers.Contract(vecrvDeployments[chain].vecrv_oracle, vecrvOracleABI, chainProvider);
                 const balance = await oracleContract.balanceOf(address);
                 return Math.floor(parseFloat(ethers.utils.formatUnits(balance, 18)));
