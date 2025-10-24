@@ -179,9 +179,13 @@
         }
         .chains-table .price {
             font-family: 'Courier New', monospace;
-            color: #6cff6c;
+            color: #eee; /* default neutral color; diff classes override */
             font-weight: 600;
         }
+        /* Ensure diff classes override base price color (specificity fix) */
+        .chains-table .price.diff-green { color: #6cff6c; }
+        .chains-table .price.diff-yellow { color: #ffe66c; }
+        .chains-table .price.diff-red { color: #ff6c6c; }
         .chains-table .timestamp {
             color: #aaa;
             font-size: 0.85rem;
@@ -253,6 +257,19 @@
         .status-warning {
             background: #3c3c1a;
             color: #ffe66c;
+        }
+        /* Difference coloring for veCRV total supply */
+        .diff-green {
+            color: #6cff6c;
+            font-weight: 600;
+        }
+        .diff-yellow {
+            color: #ffe66c;
+            font-weight: 600;
+        }
+        .diff-red {
+            color: #ff6c6c;
+            font-weight: 600;
         }
         .chain-info {
             background: #181818;
@@ -1513,6 +1530,14 @@
                     cells[2].textContent = formatPrice(oracleData.v0Price);
                     cells[3].textContent = formatPrice(oracleData.v1Price);
                     cells[4].textContent = formatPrice(oracleData.v2Price);
+
+                    // Apply diff coloring vs Ethereum main price with bps thresholds
+                    const v0Num = toPriceNumber(oracleData.v0Price);
+                    const v1Num = toPriceNumber(oracleData.v1Price);
+                    const v2Num = toPriceNumber(oracleData.v2Price);
+                    applySupplyDifferenceStyling(cells[2], v0Num, mainPrice, 0.01, 0.02);
+                    applySupplyDifferenceStyling(cells[3], v1Num, mainPrice, 0.01, 0.02);
+                    applySupplyDifferenceStyling(cells[4], v2Num, mainPrice, 0.01, 0.02);
                     
                     const timestampCell = cells[5];
                     timestampCell.innerHTML = `
@@ -1589,6 +1614,14 @@
                          }` : '--'}</td>
                 `;
                 tableBody.appendChild(row);
+                // Apply diff coloring with bps thresholds
+                const cells = row.cells;
+                const v0Num = toPriceNumber(chainData.v0Price);
+                const v1Num = toPriceNumber(chainData.v1Price);
+                const v2Num = toPriceNumber(chainData.v2Price);
+                applySupplyDifferenceStyling(cells[2], v0Num, data.mainPrice, 0.01, 0.02);
+                applySupplyDifferenceStyling(cells[3], v1Num, data.mainPrice, 0.01, 0.02);
+                applySupplyDifferenceStyling(cells[4], v2Num, data.mainPrice, 0.01, 0.02);
             });
 
             // Add divider row between active and deprecated
@@ -1627,6 +1660,14 @@
                          }` : '--'}</td>
                 `;
                 tableBody.appendChild(row);
+                // Apply diff coloring with bps thresholds
+                const cells = row.cells;
+                const v0Num = toPriceNumber(chainData.v0Price);
+                const v1Num = toPriceNumber(chainData.v1Price);
+                const v2Num = toPriceNumber(chainData.v2Price);
+                applySupplyDifferenceStyling(cells[2], v0Num, data.mainPrice, 0.01, 0.02);
+                applySupplyDifferenceStyling(cells[3], v1Num, data.mainPrice, 0.01, 0.02);
+                applySupplyDifferenceStyling(cells[4], v2Num, data.mainPrice, 0.01, 0.02);
             });
         }
 
@@ -1826,6 +1867,50 @@
             }
         }
 
+        // Apply tooltip and color based on % difference vs reference value
+        // greenThresholdPct and yellowThresholdPct are percentages (e.g., 1 for 1%)
+        function applySupplyDifferenceStyling(cellEl, chainSupply, ethSupply, greenThresholdPct = 1, yellowThresholdPct = 10) {
+            try {
+                // Clear previous classes and title
+                cellEl.classList.remove('diff-green', 'diff-yellow', 'diff-red');
+                cellEl.removeAttribute('title');
+
+                if (ethSupply === null || ethSupply === undefined || chainSupply === null || chainSupply === undefined) {
+                    return; // leave as-is (white)
+                }
+
+                if (ethSupply === 0) {
+                    return; // avoid division by zero
+                }
+
+                const diffPct = Math.abs(chainSupply - ethSupply) / ethSupply * 100;
+                const bps = diffPct * 100; // 1% = 100 bps
+                const diffText = `Difference vs Ethereum: ${diffPct.toFixed(4)}% (${bps.toFixed(2)} bps)`;
+                cellEl.setAttribute('title', diffText);
+
+                if (diffPct < greenThresholdPct) {
+                    cellEl.classList.add('diff-green');
+                } else if (diffPct < yellowThresholdPct) {
+                    cellEl.classList.add('diff-yellow');
+                } else {
+                    cellEl.classList.add('diff-red');
+                }
+            } catch (e) {
+                console.error('applySupplyDifferenceStyling error:', e);
+            }
+        }
+
+        // Helper to normalize oracle price BigNumber/values to JS number in 18 decimals
+        function toPriceNumber(value) {
+            try {
+                if (value === null || value === undefined || value === '--') return null;
+                return parseFloat(ethers.utils.formatUnits(value, 18));
+            } catch (_) {
+                const num = parseFloat(value);
+                return isNaN(num) ? null : num;
+            }
+        }
+
         // Fetch veCRV total supply from chain oracle
         async function fetchChainVecrvTotalSupply(chain, oracleAddress) {
             try {
@@ -1910,6 +1995,7 @@
                     const cells = row.cells;
                     cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
                     cells[3].textContent = chainTotalSupply !== null ? chainTotalSupply.toLocaleString() : '--'; // Total Supply
+                    applySupplyDifferenceStyling(cells[3], chainTotalSupply, ethereumTotalSupply);
 
                     // Add to data cache
                     data.chains.push({ 
@@ -1957,6 +2043,9 @@
                     <td class="total-supply">${chainData.totalSupply !== null ? chainData.totalSupply.toLocaleString() : '--'}</td>
                 `;
                 tableBody.appendChild(row);
+                // Apply difference styling after row is in DOM
+                const cell = row.cells[3];
+                applySupplyDifferenceStyling(cell, chainData.totalSupply, data.ethereumTotalSupply);
             });
         }
 
@@ -2068,9 +2157,14 @@
             const ethereumBalance = await fetchEthereumVecrvBalance(address);
             const balanceDisplay = document.getElementById('balance-amount');
             balanceDisplay.textContent = ethereumBalance !== null ? ethereumBalance.toLocaleString() : '--';
+            // Color current veCRV balance green when loaded
+            balanceDisplay.classList.remove('diff-green', 'diff-yellow', 'diff-red');
+            if (ethereumBalance !== null) {
+                balanceDisplay.classList.add('diff-green');
+            }
             
-            // Populate delegation table
-            const delegationData = await loadDelegationData(address);
+            // Populate delegation table (pass Ethereum balance for diff coloring)
+            const delegationData = await loadDelegationData(address, ethereumBalance);
             
             // Cache the data
             addressCache[address] = { ethereumBalance, delegationData };
@@ -2080,12 +2174,17 @@
             // Update balance display
             const balanceDisplay = document.getElementById('balance-amount');
             balanceDisplay.textContent = data.ethereumBalance !== null ? data.ethereumBalance.toLocaleString() : '--';
+            // Color current veCRV balance green when loaded
+            balanceDisplay.classList.remove('diff-green', 'diff-yellow', 'diff-red');
+            if (data.ethereumBalance !== null) {
+                balanceDisplay.classList.add('diff-green');
+            }
             
-            // Display delegation table
-            displayDelegationTable(data.delegationData);
+            // Display delegation table with diff coloring versus Ethereum balance
+            displayDelegationTable(data.delegationData, data.ethereumBalance);
         }
 
-        function displayDelegationTable(delegationData) {
+        function displayDelegationTable(delegationData, ethereumBalance) {
             const tableBody = document.getElementById('delegation-table-body');
             tableBody.innerHTML = '';
 
@@ -2104,6 +2203,9 @@
                 }
                 
                 tableBody.appendChild(row);
+                // Apply difference styling on balance cell
+                const balCell = row.cells[4];
+                applySupplyDifferenceStyling(balCell, chainData.chainBalance, ethereumBalance);
             });
         }
 
@@ -2165,7 +2267,7 @@
             }
         }
 
-        async function loadDelegationData(address) {
+        async function loadDelegationData(address, ethereumBalance) {
             const tableBody = document.getElementById('delegation-table-body');
             tableBody.innerHTML = '';
 
@@ -2207,6 +2309,7 @@
                 cells[2].innerHTML = renderDelegationCell(chain, ethereumDelegation); // Ethereum delegation (link uses chain)
                 cells[3].innerHTML = renderDelegationCell(chain, chainDelegation); // Chain delegation
                 cells[4].textContent = chainBalance !== null ? chainBalance.toLocaleString() : '--'; // Balance
+                applySupplyDifferenceStyling(cells[4], chainBalance, ethereumBalance);
 
                 // Check if delegations don't match and highlight row
                 const isMismatch = ethereumDelegation && chainDelegation && 
