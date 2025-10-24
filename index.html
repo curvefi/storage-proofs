@@ -202,6 +202,16 @@
         .chains-table .tx-link:hover {
             text-decoration: underline;
         }
+        /* Controls under tables (veCRV show/hide) */
+        .table-controls {
+            margin: 8px 0 0 0;
+        }
+        .table-controls .tx-link {
+            color: #888;
+        }
+        .table-controls .tx-link:hover {
+            color: #aaa;
+        }
         .status-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -675,6 +685,7 @@
                     <!-- Data will be populated by JavaScript -->
                 </tbody>
             </table>
+            <div id="vecrv-supply-controls" class="table-controls"></div>
 
             <!-- Address Input Section -->
             <div class="address-input-section">
@@ -716,6 +727,7 @@
                     <!-- Data will be populated by JavaScript -->
                 </tbody>
             </table>
+            <div id="delegation-controls" class="table-controls"></div>
         </div>
         <div id="xgov" class="tab-content">
             <div class="content-header">
@@ -1993,13 +2005,24 @@
 
             console.log('veCRV deployments:', Object.keys(vecrvDeployments).length);
 
-            // Create all rows first with loading state
+            // Partition chains: prioritized (full list) vs extras
+            const allEntries = Object.entries(vecrvDeployments);
+            const prioritizedEntries = allEntries.filter(([chain]) => FULL_VECRV_LIST.has(chain));
+            const extraEntries = allEntries.filter(([chain]) => !FULL_VECRV_LIST.has(chain));
+
+            // Render the Show/Hide button immediately
+            const supplyControls = document.getElementById('vecrv-supply-controls');
+            if (extraEntries.length > 0) {
+                supplyControls.innerHTML = `<a href="#" class="tx-link" onclick="toggleVecrvSupplyExtra(); return false;">${vecrvSupplyShowAll ? 'Show fewer chains' : 'Show remaining chains (' + extraEntries.length + ')'}</a>`;
+            } else {
+                supplyControls.innerHTML = '';
+            }
+
+            // Create loading rows only for prioritized chains
             const vecrvRows = [];
-            for (const [chain, chainData] of Object.entries(vecrvDeployments)) {
+            for (const [chain, chainData] of prioritizedEntries) {
                 console.log(`Processing veCRV chain: ${chain}`);
                 const row = document.createElement('tr');
-                
-                // Show loading state
                 row.innerHTML = `
                     <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
                     <td class="chain-id">Loading...</td>
@@ -2013,9 +2036,11 @@
                 tableBody.appendChild(row);
                 vecrvRows.push({ row, chain, chainData });
             }
+            // Prepare fetch targets for extras (no initial DOM rows)
+            const vecrvExtraTargets = extraEntries.map(([chain, chainData]) => ({ row: null, chain, chainData }));
 
             // Now fetch all data in parallel
-            const vecrvFetchPromises = vecrvRows.map(async ({ row, chain, chainData }) => {
+            const vecrvFetchPromises = [...vecrvRows, ...vecrvExtraTargets].map(async ({ row, chain, chainData }) => {
                 try {
                     // Fetch actual chain ID from network
                     const actualChainId = await fetchVecrvChainId(chain);
@@ -2026,10 +2051,12 @@
                     console.log(`Total supply for ${chain}:`, chainTotalSupply);
                     
                     // Update row with real data
-                    const cells = row.cells;
-                    cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
-                    cells[3].textContent = chainTotalSupply !== null ? chainTotalSupply.toLocaleString() : '--'; // Total Supply
-                    applySupplyDifferenceStyling(cells[3], chainTotalSupply, ethereumTotalSupply);
+                    if (row) {
+                        const cells = row.cells;
+                        cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
+                        cells[3].textContent = chainTotalSupply !== null ? chainTotalSupply.toLocaleString() : '--'; // Total Supply
+                        applySupplyDifferenceStyling(cells[3], chainTotalSupply, ethereumTotalSupply);
+                    }
 
                     // Add to data cache
                     data.chains.push({ 
@@ -2041,9 +2068,11 @@
                 } catch (error) {
                     console.error(`Error processing veCRV ${chain}:`, error);
                     // Update row with error state
-                    const cells = row.cells;
-                    cells[1].textContent = 'Error';
-                    cells[3].textContent = 'Error';
+                    if (row) {
+                        const cells = row.cells;
+                        cells[1].textContent = 'Error';
+                        cells[3].textContent = 'Error';
+                    }
                 }
             });
 
@@ -2055,6 +2084,17 @@
             vecrvCache = data;
         }
 
+        // Full veCRV deployment list to prioritize initially
+        const FULL_VECRV_LIST = new Set([
+            'optimism','bsc','gnosis','polygon','sonic','x layer','fantom','fraxtal','hyper','base','arbitrum','avalanche','etherlink','taiko'
+        ]);
+        let vecrvSupplyShowAll = false;
+
+        function toggleVecrvSupplyExtra() {
+            vecrvSupplyShowAll = !vecrvSupplyShowAll;
+            if (vecrvCache) displayVecrvData(vecrvCache);
+        }
+
         function displayVecrvData(data) {
             // Update Ethereum display
             const ethereumDisplay = document.getElementById('ethereum-totalsupply');
@@ -2064,7 +2104,11 @@
             const tableBody = document.getElementById('vecrv-table-body');
             tableBody.innerHTML = '';
 
-            data.chains.forEach(chainData => {
+            const prioritized = data.chains.filter(cd => FULL_VECRV_LIST.has(cd.chain));
+            const extras = data.chains.filter(cd => !FULL_VECRV_LIST.has(cd.chain));
+            const rowsToRender = vecrvSupplyShowAll ? [...prioritized, ...extras] : prioritized;
+
+            rowsToRender.forEach(chainData => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
@@ -2081,6 +2125,14 @@
                 const cell = row.cells[3];
                 applySupplyDifferenceStyling(cell, chainData.totalSupply, data.ethereumTotalSupply);
             });
+
+            // Render controls
+            const controls = document.getElementById('vecrv-supply-controls');
+            if (extras.length > 0) {
+                controls.innerHTML = `<a href="#" class="tx-link" onclick="toggleVecrvSupplyExtra(); return false;">${vecrvSupplyShowAll ? 'Show fewer chains' : 'Show remaining chains (' + extras.length + ')'}</a>`;
+            } else {
+                controls.innerHTML = '';
+            }
         }
 
         function refreshData() {
@@ -2218,30 +2270,49 @@
             displayDelegationTable(data.delegationData, data.ethereumBalance);
         }
 
-        function displayDelegationTable(delegationData, ethereumBalance) {
-            const tableBody = document.getElementById('delegation-table-body');
-            tableBody.innerHTML = '';
+let vecrvDelegationShowAll = false;
+function toggleVecrvDelegationExtra() {
+    vecrvDelegationShowAll = !vecrvDelegationShowAll;
+    const addressInput = document.getElementById('address-input');
+    const addr = addressInput.value.trim();
+    if (addr && addressCache[addr]) {
+        displayDelegationTable(addressCache[addr].delegationData, addressCache[addr].ethereumBalance);
+    }
+}
 
-            delegationData.forEach(chainData => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
-                    <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
-                    <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.ethereumDelegation)}</td>
-                    <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.chainDelegation)}</td>
-                    <td class="balance">${chainData.chainBalance !== null ? chainData.chainBalance.toLocaleString() : '--'}</td>
-                `;
-                
-                if (chainData.isMismatch) {
-                    row.className = 'delegation-mismatch';
-                }
-                
-                tableBody.appendChild(row);
-                // Apply difference styling on balance cell
-                const balCell = row.cells[4];
-                applySupplyDifferenceStyling(balCell, chainData.chainBalance, ethereumBalance);
-            });
+function displayDelegationTable(delegationData, ethereumBalance) {
+    const tableBody = document.getElementById('delegation-table-body');
+    tableBody.innerHTML = '';
+
+    const prioritized = delegationData.filter(cd => FULL_VECRV_LIST.has(cd.chain));
+    const extras = delegationData.filter(cd => !FULL_VECRV_LIST.has(cd.chain));
+    const rowsToRender = vecrvDelegationShowAll ? [...prioritized, ...extras] : prioritized;
+
+    rowsToRender.forEach(chainData => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="chain-name">${chainData.chain.charAt(0).toUpperCase() + chainData.chain.slice(1)}</td>
+            <td class="chain-id">${chainData.chainId !== null ? chainData.chainId : '--'}</td>
+            <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.ethereumDelegation)}</td>
+            <td class="delegation-cell">${renderDelegationCell(chainData.chain, chainData.chainDelegation)}</td>
+            <td class="balance">${chainData.chainBalance !== null ? chainData.chainBalance.toLocaleString() : '--'}</td>
+        `;
+        if (chainData.isMismatch) {
+            row.className = 'delegation-mismatch';
         }
+        tableBody.appendChild(row);
+        // Apply difference styling on balance cell
+        const balCell = row.cells[4];
+        applySupplyDifferenceStyling(balCell, chainData.chainBalance, ethereumBalance);
+    });
+
+    const controls = document.getElementById('delegation-controls');
+    if (extras.length > 0) {
+        controls.innerHTML = `<a href="#" class="tx-link" onclick="toggleVecrvDelegationExtra(); return false;">${vecrvDelegationShowAll ? 'Show fewer chains' : 'Show remaining chains (' + extras.length + ')'}</a>`;
+    } else {
+        controls.innerHTML = '';
+    }
+}
 
         // Fetch veCRV balance from Ethereum
         async function fetchEthereumVecrvBalance(address) {
@@ -2307,11 +2378,23 @@
 
             const delegationData = [];
 
-            // Create all rows first with loading state
+            // Partition chains and render toggle button immediately
+            const allEntries = Object.entries(vecrvDeployments);
+            const prioritizedEntries = allEntries.filter(([chain]) => FULL_VECRV_LIST.has(chain));
+            const extraEntries = allEntries.filter(([chain]) => !FULL_VECRV_LIST.has(chain));
+            const delegationControls = document.getElementById('delegation-controls');
+            if (delegationControls) {
+                if (extraEntries.length > 0) {
+                    delegationControls.innerHTML = `<a href="#" class="tx-link" onclick="toggleVecrvDelegationExtra(); return false;">${vecrvDelegationShowAll ? 'Show fewer chains' : 'Show remaining chains (' + extraEntries.length + ')'}</a>`;
+                } else {
+                    delegationControls.innerHTML = '';
+                }
+            }
+
+            // Create loading rows only for prioritized chains
             const delegationRows = [];
-            for (const [chain, data] of Object.entries(vecrvDeployments)) {
+            for (const [chain, data] of prioritizedEntries) {
                 const row = document.createElement('tr');
-                
                 // Show loading state
                 row.innerHTML = `
                     <td class="chain-name">${chain.charAt(0).toUpperCase() + chain.slice(1)}</td>
@@ -2323,9 +2406,10 @@
                 tableBody.appendChild(row);
                 delegationRows.push({ row, chain, data });
             }
+            const delegationExtraTargets = extraEntries.map(([chain, data]) => ({ row: null, chain, data }));
 
             // Now fetch all data in parallel
-            const delegationFetchPromises = delegationRows.map(async ({ row, chain, data }) => {
+            const delegationFetchPromises = [...delegationRows, ...delegationExtraTargets].map(async ({ row, chain, data }) => {
                 // Fetch actual chain ID from network
                 const actualChainId = await fetchVecrvChainId(chain);
                 
@@ -2338,17 +2422,19 @@
                 const chainBalance = await fetchChainBalance(chain, balanceAddress);
                 
                 // Update row with real data
-                const cells = row.cells;
-                cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
-                cells[2].innerHTML = renderDelegationCell(chain, ethereumDelegation); // Ethereum delegation (link uses chain)
-                cells[3].innerHTML = renderDelegationCell(chain, chainDelegation); // Chain delegation
-                cells[4].textContent = chainBalance !== null ? chainBalance.toLocaleString() : '--'; // Balance
-                applySupplyDifferenceStyling(cells[4], chainBalance, ethereumBalance);
+                if (row) {
+                    const cells = row.cells;
+                    cells[1].textContent = actualChainId !== null ? actualChainId : '--'; // Chain ID
+                    cells[2].innerHTML = renderDelegationCell(chain, ethereumDelegation); // Ethereum delegation (link uses chain)
+                    cells[3].innerHTML = renderDelegationCell(chain, chainDelegation); // Chain delegation
+                    cells[4].textContent = chainBalance !== null ? chainBalance.toLocaleString() : '--'; // Balance
+                    applySupplyDifferenceStyling(cells[4], chainBalance, ethereumBalance);
+                }
 
                 // Check if delegations don't match and highlight row
                 const isMismatch = ethereumDelegation && chainDelegation && 
                     ethereumDelegation.toLowerCase() !== chainDelegation.toLowerCase();
-                if (isMismatch) {
+                if (isMismatch && row) {
                     row.className = 'delegation-mismatch';
                 }
 
