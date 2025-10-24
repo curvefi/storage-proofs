@@ -781,9 +781,10 @@
             "plasma": "https://rpc.plasma.to",
             "plume": "https://rpc.plume.org",
             "celo": "https://forno.celo.org",
-            "fantom": "https://rpc.ftm.tools",
+            "fantom": "https://rpc.fantom.network",
             "kava": "https://evm.kava.io",
-            "moonbeam": "https://rpc.api.moonbeam.network"
+            "moonbeam": "https://rpc.api.moonbeam.network",
+            "x layer": "https://rpc.xlayer.tech"
         };
 
         // Unified Explorer base URLs
@@ -812,7 +813,8 @@
             "celo": "https://celoscan.io",
             "fantom": "https://ftmscan.com",
             "kava": "https://kavascan.com",
-            "moonbeam": "https://moonscan.io"
+            "moonbeam": "https://moonscan.io",
+            "x layer": "https://www.oklink.com/x-layer"
         };
 
         function normalizeChainKey(chain) {
@@ -895,23 +897,23 @@
             },
             "hyper": {
                 "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
-                "chainId": null
+                "chainId": 999
             },
             "plume": {
                 "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
-                "chainId": null
+                "chainId": 98866
             },
             "plasma": {
                 "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
-                "chainId": null
+                "chainId": 9745
             },
             "ink": {
                 "verifier": "0x3c0a405E914337139992625D5100Ea141a9C4d11",
-                "chainId": null
+                "chainId": 57073
             },
             "corn": {
                 "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
-                "chainId": null
+                "chainId": 21000000
             },
             "aurora": {
                 "verifier": "0x6a2691068C7CbdA03292Ba0f9c77A25F658bAeF5",
@@ -923,25 +925,39 @@
             },
             "etherlink": {
                 "verifier": "0x74d6aABD6197E83d963F0B48be9C034F93E8E66d",
-                "chainId": null
+                "chainId": 42793
             },
             "tac": {
                 "verifier": "0xE5De15A9C9bBedb4F5EC13B131E61245f2983A69",
-                "chainId": null
+                "chainId": 239
             }
         };
 
         // veCRV deployments
         const vecrvDeployments = {
-            "optimism": { "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d" },
-            "base": { "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412" },
-            "fraxtal": { "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf" },
-            "mantle": { "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5" },
-            "taiko": { "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30" },
-            "sonic": { "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d" },
-            "arbitrum": { "vecrv_oracle": "0x4D1AF9911e4c19f64Be36c36EF39Fd026Bc9bb61" },
-            "gnosis": { "vecrv_oracle": "0x2Fa3cbAc10f1Ec7618a383a005862D900b470334" },
-            "bsc": { "vecrv_oracle": "0xA3ea433509F7941df3e33857D9c9f212Ad4A4e64" }
+            "optimism":  { "vecrv_oracle": "0xf1946d4879646e0fcd8f5bb32a5636ed8055176d" },
+            "base":      { "vecrv_oracle": "0xeB896fB7D1AaE921d586B0E5a037496aFd3E2412" },
+            "fraxtal":   { "vecrv_oracle": "0xF3daD3Ca2eF135b248128Ab1Ed984FB6F2185CBf" },
+            "mantle":    { "vecrv_oracle": "0x852F32c22C5035EA12566EDFB4415625776D75d5" },
+            "taiko":     { "vecrv_oracle": "0x5C57BdcFF69B4F1D894EA70c0470D39C8FA0ee30" },
+            "sonic":     { "vecrv_oracle": "0x361aa6D20fbf6185490eB2ddf1DD1D3F301C201d" },
+            "arbitrum":  { "vecrv_oracle": "0x4D1AF9911e4c19f64Be36c36EF39Fd026Bc9bb61" },
+            "gnosis":    { "vecrv_oracle": "0x2Fa3cbAc10f1Ec7618a383a005862D900b470334" },
+            "bsc":       { "vecrv_oracle": "0xA3ea433509F7941df3e33857D9c9f212Ad4A4e64" },
+            "polygon":   { "vecrv_oracle": "0x5Af79133999f7908953E94b7A5CF367740Ebee35" },
+            "avalanche": { "vecrv_oracle": "0x1Db36DD6eB571CEdF0743582745EF1A333742155" },
+            "x layer":   { "vecrv_oracle": "0xe35A879E5EfB4F1Bb7F70dCF3250f2e19f096bd8" },
+            "plume":     { "vecrv_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1" },
+            "plasma":    { "vecrv_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1" },
+            "ink":       { "vecrv_oracle": "0x6a2691068C7CbdA03292Ba0f9c77A25F658bAeF5" },
+            "corn":      { "vecrv_oracle": "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1" },
+            "aurora":    { "vecrv_oracle": "0x070A5C8a99002F50C18B52B90e938BC477611b16" },
+            "tac":       { "vecrv_oracle": "0x6a2691068C7CbdA03292Ba0f9c77A25F658bAeF5" },
+            "etherlink": { "vecrv_oracle": "0x5De4EF4879F4fe3bBADF2227D2aC5d0E2D76C895" },
+            "celo":      { "vecrv_oracle": "0x070A5C8a99002F50C18B52B90e938BC477611b16" },
+            "fantom":    { "vecrv_oracle": "0xC6452F058fF4bb248D852C7b5f0E8753B8DbAbda" },
+            "kava":      { "vecrv_oracle": "0xbD2775B8eADaE81501898eB208715f0040E51882" },
+            "xdc":       { "vecrv_oracle": "0x47ca04Ee05f167583122833abfb0f14aC5677Ee4" }
         };
 
         // Agent types
