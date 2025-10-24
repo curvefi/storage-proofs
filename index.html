@@ -17,7 +17,7 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 900px;
+            max-width: 930px;
             margin: 40px auto;
             background: #181818;
             border-radius: 10px;
@@ -189,6 +189,10 @@
         .chains-table .timestamp {
             color: #aaa;
             font-size: 0.85rem;
+        }
+        .chains-table .timestamp-sub {
+            color: #888;
+            font-size: 0.7rem;
         }
         .chains-table .tx-link {
             color: #4ea1ff;
@@ -1239,6 +1243,20 @@
             }
         }
 
+        // Format absolute timestamp for tooltip display
+        function formatAbsoluteTimestamp(timestamp) {
+            if (!timestamp) return '--';
+            try {
+                const d = new Date(timestamp * 1000);
+                return d.toLocaleString(undefined, {
+                    year: 'numeric', month: 'short', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            } catch (_) {
+                return '--';
+            }
+        }
+
         function explorerBase(chain) {
             const key = normalizeChainKey(chain);
             return EXPLORER_URLS[key] || 'https://etherscan.io';
@@ -1394,17 +1412,27 @@
                 // If we found events, get the latest one
                 if (events.length > 0) {
                     const latestEvent = events[events.length - 1];
-                    
-                    // Handle different event structures
-                    if (version === 'v0') {
-                        // ScrvusdOracle: event has 'at' field instead of 'price_params_ts'
-                        lastUpdate = latestEvent.args[1]; // 'at' is the second argument
-                    } else {
-                        // ScrvusdOracleV1/V2: event has 'price_params_ts' field
-                        lastUpdate = latestEvent.args[1]; // 'price_params_ts' is the second argument
-                    }
-                    
                     txHash = latestEvent.transactionHash;
+
+                    // Extract stored timestamp from event args (price_params_ts / at)
+                    let tsArg = latestEvent && latestEvent.args ? latestEvent.args[1] : null;
+                    if (tsArg !== null && tsArg !== undefined) {
+                        try {
+                            lastUpdate = typeof tsArg.toNumber === 'function' ? tsArg.toNumber() : parseInt(tsArg.toString(), 10);
+                        } catch (_) {
+                            lastUpdate = null;
+                        }
+                    }
+
+                    // Also fetch the transaction block timestamp
+                    try {
+                        const block = await chainProvider.getBlock(latestEvent.blockNumber);
+                        if (block && block.timestamp) {
+                            var txTimestamp = Number(block.timestamp);
+                        }
+                    } catch (e) {
+                        console.warn(`Failed to fetch block timestamp for ${chain}`, e);
+                    }
                 }
 
                 return {
@@ -1412,7 +1440,8 @@
                     v1Price,
                     v2Price,
                     lastUpdate,
-                    txHash
+                    txHash,
+                    txTimestamp
                 };
             } catch (error) {
                 console.error(`Error fetching data for ${chain}:`, error);
@@ -1421,7 +1450,8 @@
                     v1Price: '--',
                     v2Price: '--',
                     lastUpdate: null,
-                    txHash: null
+                    txHash: null,
+                    txTimestamp: null
                 };
             }
         }
@@ -1542,6 +1572,7 @@
                     const timestampCell = cells[5];
                     timestampCell.innerHTML = `
                         <div class="timestamp">${formatTimestamp(oracleData.lastUpdate)}</div>
+                        <div class="timestamp-sub">TX: ${formatTimestamp(oracleData.txTimestamp)}</div>
                         ${oracleData.txHash ? 
                             `<a href="${getExplorerTxUrl(chain, oracleData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
                             '<span class="tx-link">--</span>'
@@ -1556,6 +1587,7 @@
                         v2Price: oracleData.v2Price,
                         lastUpdate: oracleData.lastUpdate,
                         txHash: oracleData.txHash,
+                        txTimestamp: oracleData.txTimestamp,
                         oracle: chainData.scrvusd_oracle, 
                         version: chainData.version 
                     });
@@ -1607,7 +1639,8 @@
                     <td class="price">${formatPrice(chainData.v1Price)}</td>
                     <td class="price">${formatPrice(chainData.v2Price)}</td>
                     <td>${chainData.lastUpdate ? 
-                        `<div class="timestamp">${formatTimestamp(chainData.lastUpdate)}</div>
+                        `<div class=\"timestamp\">${formatTimestamp(chainData.lastUpdate)}</div>
+                         <div class=\"timestamp-sub\">TX: ${formatTimestamp(chainData.txTimestamp)}</div>
                          ${chainData.txHash ? 
                              `<a href="${getExplorerTxUrl(chainData.chain, chainData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
                              '<span class="tx-link">--</span>'
@@ -1653,7 +1686,8 @@
                     <td class="price">${formatPrice(chainData.v1Price)}</td>
                     <td class="price">${formatPrice(chainData.v2Price)}</td>
                     <td>${chainData.lastUpdate ? 
-                        `<div class="timestamp">${formatTimestamp(chainData.lastUpdate)}</div>
+                        `<div class=\"timestamp\">${formatTimestamp(chainData.lastUpdate)}</div>
+                         <div class=\"timestamp-sub\">TX: ${formatTimestamp(chainData.txTimestamp)}</div>
                          ${chainData.txHash ? 
                              `<a href="${getExplorerTxUrl(chainData.chain, chainData.txHash)}" target="_blank" class="tx-link">View TX</a>` : 
                              '<span class="tx-link">--</span>'
