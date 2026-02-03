@@ -374,6 +374,9 @@
             .chains-table td {
                 padding: 8px 4px;
             }
+            .rpc-settings {
+                margin: 12px 12px 0;
+            }
         }
         .divider-row {
             background: #23272e;
@@ -588,6 +591,107 @@
         .address-link:hover {
             text-decoration: underline;
         }
+        .rpc-settings {
+            margin: 18px 24px 0;
+            padding: 12px 16px;
+            border: 1px solid #23272e;
+            border-radius: 8px;
+            background: #15181b;
+            color: #eee;
+        }
+        .rpc-settings summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #eee;
+        }
+        .rpc-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .rpc-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .rpc-row > * {
+            flex: 1;
+            min-width: 220px;
+        }
+        .rpc-grid label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #888;
+        }
+        .rpc-grid input,
+        .rpc-grid select,
+        .rpc-grid textarea {
+            background: #23272e;
+            color: #eee;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+        .rpc-grid textarea {
+            font-family: 'Courier New', monospace;
+            min-height: 90px;
+            resize: vertical;
+        }
+        .rpc-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .rpc-button {
+            background: #23272e;
+            color: #eee;
+            border: 1px solid #333;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .rpc-button:hover {
+            background: #4ea1ff;
+            color: #111;
+            border-color: #4ea1ff;
+        }
+        .rpc-button.secondary {
+            background: #1a1a1a;
+            color: #aaa;
+        }
+        .rpc-button.secondary:hover {
+            background: #333;
+            color: #eee;
+            border-color: #333;
+        }
+        .rpc-status {
+            color: #888;
+            font-size: 0.85rem;
+        }
+        .rpc-note {
+            font-size: 0.75rem;
+            color: #888;
+            line-height: 1.4;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .rpc-block {
+            gap: 8px;
+        }
+        .rpc-block textarea {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -601,6 +705,45 @@
             <button class="tab" onclick="switchTab('vecrv')">veCRV</button>
             <button class="tab" onclick="switchTab('xgov')">xGov</button>
         </div>
+        <details class="rpc-settings">
+            <summary>RPC settings</summary>
+            <div class="rpc-grid">
+                <div class="rpc-row">
+                    <label>
+                        DRPC key
+                        <input id="rpc-drpc-key" type="text" placeholder="Optional" autocomplete="off">
+                    </label>
+                    <label>
+                        Ankr key
+                        <input id="rpc-ankr-key" type="text" placeholder="Optional" autocomplete="off">
+                    </label>
+                </div>
+                <div class="rpc-row">
+                    <label>
+                        Provider
+                        <select id="rpc-provider">
+                            <option value="default">Default</option>
+                            <option value="drpc">DRPC</option>
+                            <option value="ankr">Ankr</option>
+                            <option value="custom">Custom overrides only</option>
+                        </select>
+                    </label>
+                    <div class="rpc-actions">
+                        <button type="button" class="rpc-button" id="rpc-apply">Apply</button>
+                        <button type="button" class="rpc-button secondary" id="rpc-reset">Reset to default</button>
+                        <span class="rpc-status" id="rpc-status"></span>
+                    </div>
+                </div>
+                <label class="rpc-block">
+                    Custom overrides (one per line: chain=rpc)
+                    <textarea id="rpc-custom-map" rows="4" placeholder="ethereum=https://...\noptimism=https://...\narbitrum=https://..."></textarea>
+                </label>
+                <div class="rpc-note">
+                    Settings are stored in your browser (localStorage). Provider shortcuts apply only to supported chains:
+                    ethereum, optimism, arbitrum, polygon, avalanche, bsc, gnosis, fantom, celo, kava, moonbeam.
+                </div>
+            </div>
+        </details>
         <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
         <div id="scrvusd" class="tab-content active">
             <div class="content-header">
@@ -789,9 +932,10 @@
         let provider = null;
         let signer = null;
         let walletConnected = false;
+        let rpcSettingsInitialized = false;
 
         // Unified RPC endpoints configuration
-        const RPC_ENDPOINTS = {
+        const DEFAULT_RPC_ENDPOINTS = {
             "ethereum": "https://eth.llamarpc.com",
             "optimism": "https://mainnet.optimism.io",
             "base": "https://mainnet.base.org",
@@ -819,6 +963,7 @@
             "moonbeam": "https://rpc.api.moonbeam.network",
             "x layer": "https://rpc.xlayer.tech"
         };
+        const RPC_ENDPOINTS = { ...DEFAULT_RPC_ENDPOINTS };
 
         // Unified Explorer base URLs
         const EXPLORER_URLS = {
@@ -849,6 +994,179 @@
             "moonbeam": "https://moonscan.io",
             "x layer": "https://www.oklink.com/x-layer"
         };
+
+        const RPC_STORAGE_KEY = "storage-proofs.rpc.settings";
+        const RPC_TEMPLATES = {
+            drpc: "https://lb.drpc.live/{{chain}}/{{key}}",
+            ankr: "https://rpc.ankr.com/{{chain}}/{{key}}"
+        };
+        const RPC_CHAIN_SLUGS = {
+            ethereum: { drpc: "eth", ankr: "eth" },
+            optimism: { drpc: "optimism", ankr: "optimism" },
+            arbitrum: { drpc: "arbitrum", ankr: "arbitrum" },
+            polygon: { drpc: "polygon", ankr: "polygon" },
+            avalanche: { drpc: "avalanche", ankr: "avalanche" },
+            bsc: { drpc: "bsc", ankr: "bsc" },
+            gnosis: { drpc: "gnosis", ankr: "gnosis" },
+            fantom: { drpc: "fantom", ankr: "fantom" },
+            celo: { drpc: "celo", ankr: "celo" },
+            kava: { drpc: "kava", ankr: "kava" },
+            moonbeam: { drpc: "moonbeam", ankr: "moonbeam" }
+        };
+
+        function getDefaultRpcSettings() {
+            return {
+                provider: "default",
+                drpcKey: "",
+                ankrKey: "",
+                customMap: ""
+            };
+        }
+
+        function loadRpcSettings() {
+            try {
+                const raw = localStorage.getItem(RPC_STORAGE_KEY);
+                if (!raw) return getDefaultRpcSettings();
+                const parsed = JSON.parse(raw);
+                return {
+                    ...getDefaultRpcSettings(),
+                    ...parsed
+                };
+            } catch (_) {
+                return getDefaultRpcSettings();
+            }
+        }
+
+        function saveRpcSettings(settings) {
+            localStorage.setItem(RPC_STORAGE_KEY, JSON.stringify(settings));
+        }
+
+        function parseCustomRpcMap(text) {
+            const map = {};
+            (text || "").split(/\r?\n/).forEach((line) => {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith("#")) return;
+                const splitIndex = trimmed.indexOf("=");
+                if (splitIndex === -1) return;
+                const key = trimmed.slice(0, splitIndex).trim();
+                const value = trimmed.slice(splitIndex + 1).trim();
+                if (!key || !value) return;
+                map[key] = value;
+            });
+            return map;
+        }
+
+        function buildProviderUrl(provider, chainKey, key) {
+            if (!provider || !key) return null;
+            const slug = RPC_CHAIN_SLUGS[chainKey] && RPC_CHAIN_SLUGS[chainKey][provider];
+            if (!slug) return null;
+            const template = RPC_TEMPLATES[provider];
+            if (!template) return null;
+            return template.replace("{{chain}}", slug).replace("{{key}}", key);
+        }
+
+        function applyRpcSettings(settings, options = {}) {
+            const { refresh = true } = options;
+            const endpoints = { ...DEFAULT_RPC_ENDPOINTS };
+            const providerChoice = settings.provider || "default";
+            const drpcKey = (settings.drpcKey || "").trim();
+            const ankrKey = (settings.ankrKey || "").trim();
+
+            if (providerChoice === "drpc" && drpcKey) {
+                Object.keys(endpoints).forEach((chainKey) => {
+                    const url = buildProviderUrl("drpc", chainKey, drpcKey);
+                    if (url) endpoints[chainKey] = url;
+                });
+            }
+
+            if (providerChoice === "ankr" && ankrKey) {
+                Object.keys(endpoints).forEach((chainKey) => {
+                    const url = buildProviderUrl("ankr", chainKey, ankrKey);
+                    if (url) endpoints[chainKey] = url;
+                });
+            }
+
+            const customOverrides = parseCustomRpcMap(settings.customMap);
+            Object.keys(customOverrides).forEach((chainKey) => {
+                const normalized = normalizeChainKey(chainKey);
+                if (endpoints[normalized]) {
+                    endpoints[normalized] = customOverrides[chainKey];
+                }
+            });
+
+            Object.assign(RPC_ENDPOINTS, endpoints);
+
+            const statusEl = document.getElementById("rpc-status");
+            if (statusEl) {
+                let status = "Using default RPCs";
+                if (providerChoice === "drpc") {
+                    status = drpcKey ? "Using DRPC" : "DRPC selected (missing key, using defaults)";
+                } else if (providerChoice === "ankr") {
+                    status = ankrKey ? "Using Ankr" : "Ankr selected (missing key, using defaults)";
+                } else if (providerChoice === "custom") {
+                    status = settings.customMap ? "Using custom overrides" : "Custom selected (no overrides)";
+                }
+                statusEl.textContent = status;
+            }
+
+            if (refresh) {
+                refreshData();
+            }
+        }
+
+        function syncRpcForm(settings) {
+            const providerEl = document.getElementById("rpc-provider");
+            const drpcEl = document.getElementById("rpc-drpc-key");
+            const ankrEl = document.getElementById("rpc-ankr-key");
+            const customEl = document.getElementById("rpc-custom-map");
+
+            if (providerEl) providerEl.value = settings.provider || "default";
+            if (drpcEl) drpcEl.value = settings.drpcKey || "";
+            if (ankrEl) ankrEl.value = settings.ankrKey || "";
+            if (customEl) customEl.value = settings.customMap || "";
+        }
+
+        function readRpcForm() {
+            const providerEl = document.getElementById("rpc-provider");
+            const drpcEl = document.getElementById("rpc-drpc-key");
+            const ankrEl = document.getElementById("rpc-ankr-key");
+            const customEl = document.getElementById("rpc-custom-map");
+
+            return {
+                provider: providerEl ? providerEl.value : "default",
+                drpcKey: drpcEl ? drpcEl.value.trim() : "",
+                ankrKey: ankrEl ? ankrEl.value.trim() : "",
+                customMap: customEl ? customEl.value.trim() : ""
+            };
+        }
+
+        function initRpcSettings() {
+            if (rpcSettingsInitialized) return;
+            rpcSettingsInitialized = true;
+
+            const settings = loadRpcSettings();
+            syncRpcForm(settings);
+            applyRpcSettings(settings, { refresh: false });
+
+            const rpcApply = document.getElementById("rpc-apply");
+            if (rpcApply) {
+                rpcApply.addEventListener("click", () => {
+                    const next = readRpcForm();
+                    saveRpcSettings(next);
+                    applyRpcSettings(next, { refresh: true });
+                });
+            }
+
+            const rpcReset = document.getElementById("rpc-reset");
+            if (rpcReset) {
+                rpcReset.addEventListener("click", () => {
+                    localStorage.removeItem(RPC_STORAGE_KEY);
+                    const defaults = getDefaultRpcSettings();
+                    syncRpcForm(defaults);
+                    applyRpcSettings(defaults, { refresh: true });
+                });
+            }
+        }
 
         function normalizeChainKey(chain) {
             return (chain || '').replace(/-deprecated$/, '');
@@ -2005,8 +2323,8 @@
 
             console.log('veCRV deployments:', Object.keys(vecrvDeployments).length);
 
-            // Partition chains: prioritized (full list) vs extras
-            const allEntries = Object.entries(vecrvDeployments);
+            // Partition chains: prioritized (full list) vs extras (alphabetically sorted)
+            const allEntries = Object.entries(vecrvDeployments).sort((a, b) => a[0].localeCompare(b[0]));
             const prioritizedEntries = allEntries.filter(([chain]) => FULL_VECRV_LIST.has(chain));
             const extraEntries = allEntries.filter(([chain]) => !FULL_VECRV_LIST.has(chain));
 
@@ -2018,9 +2336,10 @@
                 supplyControls.innerHTML = '';
             }
 
-            // Create loading rows only for prioritized chains
+            // Create loading rows: prioritized by default; all if toggled to show all
+            const entriesToRender = vecrvSupplyShowAll ? allEntries : prioritizedEntries;
             const vecrvRows = [];
-            for (const [chain, chainData] of prioritizedEntries) {
+            for (const [chain, chainData] of entriesToRender) {
                 console.log(`Processing veCRV chain: ${chain}`);
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -2036,8 +2355,9 @@
                 tableBody.appendChild(row);
                 vecrvRows.push({ row, chain, chainData });
             }
-            // Prepare fetch targets for extras (no initial DOM rows)
-            const vecrvExtraTargets = extraEntries.map(([chain, chainData]) => ({ row: null, chain, chainData }));
+            // Prepare fetch targets for entries without initial DOM rows
+            const notRenderedEntries = vecrvSupplyShowAll ? [] : extraEntries;
+            const vecrvExtraTargets = notRenderedEntries.map(([chain, chainData]) => ({ row: null, chain, chainData }));
 
             // Now fetch all data in parallel
             const vecrvFetchPromises = [...vecrvRows, ...vecrvExtraTargets].map(async ({ row, chain, chainData }) => {
@@ -2086,13 +2406,17 @@
 
         // Full veCRV deployment list to prioritize initially
         const FULL_VECRV_LIST = new Set([
-            'optimism','bsc','gnosis','polygon','sonic','x layer','fantom','fraxtal','hyper','base','arbitrum','avalanche','etherlink','taiko'
+            'optimism','bsc','gnosis','polygon','sonic','x layer','fantom','fraxtal','hyper','moonbeam','kava','mantle','base','arbitrum','celo','avalanche','aurora'
         ]);
         let vecrvSupplyShowAll = false;
 
         function toggleVecrvSupplyExtra() {
             vecrvSupplyShowAll = !vecrvSupplyShowAll;
-            if (vecrvCache) displayVecrvData(vecrvCache);
+            if (vecrvCache) {
+                displayVecrvData(vecrvCache);
+            } else {
+                loadVecrvData();
+            }
         }
 
         function displayVecrvData(data) {
@@ -2104,8 +2428,9 @@
             const tableBody = document.getElementById('vecrv-table-body');
             tableBody.innerHTML = '';
 
-            const prioritized = data.chains.filter(cd => FULL_VECRV_LIST.has(cd.chain));
-            const extras = data.chains.filter(cd => !FULL_VECRV_LIST.has(cd.chain));
+            // Sort chains alphabetically for display
+            const prioritized = data.chains.filter(cd => FULL_VECRV_LIST.has(cd.chain)).sort((a, b) => a.chain.localeCompare(b.chain));
+            const extras = data.chains.filter(cd => !FULL_VECRV_LIST.has(cd.chain)).sort((a, b) => a.chain.localeCompare(b.chain));
             const rowsToRender = vecrvSupplyShowAll ? [...prioritized, ...extras] : prioritized;
 
             rowsToRender.forEach(chainData => {
@@ -2162,7 +2487,8 @@
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 console.log('Initializing dashboard...');
-                
+                initRpcSettings();
+
                 loadScrvusdData();
                 console.log('scrvUSD data loaded');
                 
@@ -2276,7 +2602,15 @@ function toggleVecrvDelegationExtra() {
     const addressInput = document.getElementById('address-input');
     const addr = addressInput.value.trim();
     if (addr && addressCache[addr]) {
+        // If we have cached data, render immediately according to the toggle
         displayDelegationTable(addressCache[addr].delegationData, addressCache[addr].ethereumBalance);
+    } else if (addr) {
+        // While loading (no cache yet), load and render with rows per toggle state
+        const text = (document.getElementById('balance-amount') || {}).textContent || '';
+        const parsed = text && text !== '--' ? parseFloat(text.replace(/,/g, '')) : null;
+        loadDelegationData(addr, parsed).then(data => {
+            displayDelegationTable(data, parsed);
+        });
     }
 }
 
@@ -2284,8 +2618,9 @@ function displayDelegationTable(delegationData, ethereumBalance) {
     const tableBody = document.getElementById('delegation-table-body');
     tableBody.innerHTML = '';
 
-    const prioritized = delegationData.filter(cd => FULL_VECRV_LIST.has(cd.chain));
-    const extras = delegationData.filter(cd => !FULL_VECRV_LIST.has(cd.chain));
+    // Sort alphabetically for display
+    const prioritized = delegationData.filter(cd => FULL_VECRV_LIST.has(cd.chain)).sort((a, b) => a.chain.localeCompare(b.chain));
+    const extras = delegationData.filter(cd => !FULL_VECRV_LIST.has(cd.chain)).sort((a, b) => a.chain.localeCompare(b.chain));
     const rowsToRender = vecrvDelegationShowAll ? [...prioritized, ...extras] : prioritized;
 
     rowsToRender.forEach(chainData => {
@@ -2378,8 +2713,8 @@ function displayDelegationTable(delegationData, ethereumBalance) {
 
             const delegationData = [];
 
-            // Partition chains and render toggle button immediately
-            const allEntries = Object.entries(vecrvDeployments);
+            // Partition chains and render toggle button immediately (alphabetically sorted)
+            const allEntries = Object.entries(vecrvDeployments).sort((a, b) => a[0].localeCompare(b[0]));
             const prioritizedEntries = allEntries.filter(([chain]) => FULL_VECRV_LIST.has(chain));
             const extraEntries = allEntries.filter(([chain]) => !FULL_VECRV_LIST.has(chain));
             const delegationControls = document.getElementById('delegation-controls');
